@@ -7,4 +7,5 @@ metadata:
     version: v1
 spec:
   containers:
-    - name: hinst/smart-progress-do-downloader:latest
+    - name: smart-progress-do-downloader
+      image: hinst/smart-progress-do-downloader:latest
