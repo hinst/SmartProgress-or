@@ -39,7 +39,6 @@ class App {
         const response = await fetch(url, {
             headers: {
                 Accept: 'application/json',
-                //Cookie: document.cookie,
                 Host: smartProgressHost
             }
         });
