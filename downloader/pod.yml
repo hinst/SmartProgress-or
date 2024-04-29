@@ -9,3 +9,6 @@ spec:
   containers:
     - name: smart-progress-do-downloader
       image: hinst/smart-progress-do-downloader:latest
+      env:
+        - name: goalId
+          value: '247488'
