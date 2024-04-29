@@ -1,10 +1,10 @@
 apiVersion: v1
 kind: Pod
 metadata:
-  name: SmartProgress-do/downloader
+  name: smart-progress-do-downloader
   labels:
     zone: prod
     version: v1
 spec:
   containers:
-    - name: SmartProgress-do/downloader:latest
+    - name: hinst/smart-progress-do-downloader:latest

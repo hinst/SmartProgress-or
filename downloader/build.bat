@@ -1,0 +1,1 @@
+docker build -t hinst/smart-progress-do-downloader .
