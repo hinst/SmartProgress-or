@@ -1,1 +1,1 @@
-call build && call push
+call build && call push && call rollout

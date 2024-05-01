@@ -1,1 +1,1 @@
-kubectl rollout restart deployment smart-progress-or-web-ui
+kubectl rollout restart deployment --namespace smart-progress-or web-ui
