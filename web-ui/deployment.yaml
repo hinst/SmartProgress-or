@@ -2,3 +2,24 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: smart-progress-or-web-ui
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: smart-progress-or-web-ui
+  minReadySeconds: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+    template:
+      metadata:
+        labels:
+          app: smart-progress-or-web-ui
+      spec:
+        containers:
+        - name: smart-progress-or-web-ui
+          image: hinst/smart-progress-do-downloader:latest
+          ports:
+          - containerPort: 8080
