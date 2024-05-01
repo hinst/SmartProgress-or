@@ -13,13 +13,13 @@ spec:
     rollingUpdate:
       maxUnavailable: 1
       maxSurge: 1
-    template:
-      metadata:
-        labels:
-          app: smart-progress-or-web-ui
-      spec:
-        containers:
-        - name: smart-progress-or-web-ui
-          image: hinst/smart-progress-do-downloader:latest
-          ports:
-          - containerPort: 8080
+  template:
+    metadata:
+      labels:
+        app: smart-progress-or-web-ui
+    spec:
+      containers:
+      - name: smart-progress-or-web-ui
+        image: hinst/smart-progress-or-web-ui:latest
+        ports:
+        - containerPort: 8080
