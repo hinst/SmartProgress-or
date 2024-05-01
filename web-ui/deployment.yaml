@@ -41,3 +41,16 @@ spec:
   - port: 8080
   selector:
     app: web-ui
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: smart-progress-or
+  namespace: smart-progress-or
+spec:
+  accessModes:
+  - ReadWriteOnce
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 1Gi

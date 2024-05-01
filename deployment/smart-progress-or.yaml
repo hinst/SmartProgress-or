@@ -9,10 +9,10 @@ metadata:
   name: smart-progress-or
   namespace: smart-progress-or
 spec:
-  storageClassName: manual
+  storageClassName: local-path
   capacity:
     storage: 1Gi
   accessModes:
-    - ReadWriteOnce
+  - ReadWriteOnce
   hostPath:
     path: /home/orangepi/App/smart-progress-or
