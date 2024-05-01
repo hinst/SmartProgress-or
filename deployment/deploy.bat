@@ -1,5 +1,4 @@
-kubectl apply -f caddy.yaml
-kubectl apply -f caddy-service.yaml
+kubectl apply -f web-router.yaml
 kubectl rollout restart deployment web-router
 
 kubectl apply -f smart-progress-or.yaml
