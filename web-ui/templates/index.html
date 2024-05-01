@@ -1,6 +1,6 @@
 Goals [{{len .Goals}}]
 <ul style="margin-top: 4px">
 {{range $element := .Goals}}
-    <li>{{$element.Title}}</li>
+    <li title="Goal id: {{$element.Id}}">{{$element.Title}}</li>
 {{end}}
 </ul>

@@ -1,0 +1,1 @@
+kubectl rollout restart deployment smart-progress-or-web-ui
