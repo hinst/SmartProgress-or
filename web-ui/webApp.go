@@ -12,28 +12,29 @@ type webApp struct {
 	path               string
 	dataDirectory      string
 	templatesDirectory string
+
+	indexTemplate  *template.Template
+	layoutTemplate *template.Template
 }
 
 func (me *webApp) Start() {
 	http.HandleFunc(me.path, me.getMainPage)
+	me.layoutTemplate = AssertResultError(
+		template.New("layout.html").ParseGlob(me.templatesDirectory + "/*"))
+	me.indexTemplate = AssertResultError(
+		template.New("index.html").ParseGlob(me.templatesDirectory + "/*"))
 }
 
 func (me *webApp) getLayoutPage(page Page) string {
-	var layoutTemplate = AssertResultError(
-		template.New("layout.html").ParseGlob(me.templatesDirectory + "/*"))
 	var buffer = new(strings.Builder)
-	AssertError(layoutTemplate.Execute(buffer, page))
+	AssertError(me.layoutTemplate.Execute(buffer, page))
 	return buffer.String()
 }
 
 func (me *webApp) getMainPage(writer http.ResponseWriter, request *http.Request) {
 	var textBuilder = new(strings.Builder)
-	var indexTemplate = AssertResultError(
-		template.New("index.html").ParseGlob(me.templatesDirectory + "/*"))
-	AssertError(indexTemplate.Execute(textBuilder, indexPageData{
-		Goals: me.getGoals(),
-	}))
-
+	var pageData = indexPageData{Goals: me.getGoals()}
+	AssertError(me.indexTemplate.Execute(textBuilder, pageData))
 	var pageText = me.getLayoutPage(Page{
 		Title:   "Goals",
 		Content: template.HTML(textBuilder.String()),
