@@ -17,6 +17,6 @@ spec:
     spec:
       containers:
       - name: caddy
-        image: caddy
+        image: hinst/orange-caddy
         ports:
         - containerPort: 80

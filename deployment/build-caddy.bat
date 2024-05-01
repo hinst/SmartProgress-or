@@ -1,0 +1,1 @@
+docker build -t hinst/orange-caddy -f caddy.Dockerfile . && docker push hinst/orange-caddy
