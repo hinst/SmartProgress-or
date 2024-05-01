@@ -12,15 +12,22 @@ class App {
     }
 
     async run() {
-        const goalTitle = await this.readGoalTitle(this.config.goalId);
-        const posts = await this.readGoalPosts(this.config.goalId);
+        var goalIds = this.config.goalId.split(',');
+        for (let goalId of goalIds) {
+            await this.readGoal(goalId);
+        }
+    }
+
+    private async readGoal(goalId: string) {
+        const goalTitle = await this.readGoalTitle(goalId);
+        const posts = await this.readGoalPosts(goalId);
         const goalInfo = {
-            id: this.config.goalId,
+            id: goalId,
             title: goalTitle,
             posts
         };
         fs.mkdirSync('data', { recursive: true });
-        const filePath = 'data/' + this.config.goalId + '.json';
+        const filePath = 'data/' + goalId + '.json';
         fs.writeFileSync(filePath, JSON.stringify(goalInfo, null, '\t'));
     }
 
