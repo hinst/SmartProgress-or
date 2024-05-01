@@ -1,7 +1,9 @@
+import 'source-map-support/register';
 import { Config } from './config';
 import { requireString } from './string';
 import * as Smart from './smartProgress';
 import { smartProgressHost, smartProgressUrl } from './smartProgress';
+import fs from 'fs';
 
 class App {
     constructor(private config: Config) {
@@ -9,7 +11,9 @@ class App {
 
     async run() {
         const posts = await this.readGoalPosts(this.config.goalId);
-        console.log(posts);
+        fs.mkdirSync('data', { recursive: true });
+        const filePath = 'data/' + this.config.goalId + '.json';
+        fs.writeFileSync(filePath, JSON.stringify(posts, null, '\t'));
     }
 
     private async readGoalPosts(goalId: string) {
