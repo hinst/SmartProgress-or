@@ -1,4 +1,4 @@
-FROM node:22
+FROM --platform=linux/aarch64 node:22
 
 RUN mkdir /app
 COPY dist /app/dist
