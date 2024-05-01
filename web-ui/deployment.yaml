@@ -18,6 +18,10 @@ spec:
       labels:
         app: web-ui
     spec:
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: smart-progress-or
       containers:
       - name: smart-progress-or-web-ui
         image: hinst/smart-progress-or-web-ui:latest
@@ -28,6 +32,10 @@ spec:
             path: /smartProgress-or
             port: 8080
           periodSeconds: 60
+        volumeMounts:
+          - name: data
+            mountPath: /app/data
+            readOnly: true
 ---
 apiVersion: v1
 kind: Service
@@ -41,16 +49,3 @@ spec:
   - port: 8080
   selector:
     app: web-ui
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: smart-progress-or
-  namespace: smart-progress-or
-spec:
-  accessModes:
-  - ReadWriteOnce
-  storageClassName: local-path
-  resources:
-    requests:
-      storage: 1Gi
