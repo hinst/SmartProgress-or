@@ -1,0 +1,28 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: smart-progress-do-downloader
+  namespace: smart-progress-or
+spec:
+  schedule: "*/5 * * * *"
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      backoffLimit: 1
+      template:
+        spec:
+          volumes:
+            - name: data
+              persistentVolumeClaim:
+                claimName: smart-progress-or
+          containers:
+          - name: smart-progress-do-downloader
+            image: hinst/smart-progress-do-downloader:latest
+            imagePullPolicy: Always
+            volumeMounts:
+              - name: data
+                mountPath: /app/data
+            env:
+              - name: goalId
+                value: '247488'
+          restartPolicy: Never
