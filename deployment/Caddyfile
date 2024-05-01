@@ -4,10 +4,10 @@
 :80 {
 	rate_limit {
 			zone dynamic_zone {
-					key {http.request.remote_ip}
-					events 10
+					key static
+					events 100
 					window 1s
 			}
 	}
-	reverse_proxy /smartProgress-or* localhost:9000
+	reverse_proxy /smartProgress-or* smart-progress-or-web-ui:8080
 }
