@@ -5,15 +5,35 @@ import * as Smart from './smartProgress';
 import { smartProgressHost, smartProgressUrl } from './smartProgress';
 import fs from 'fs';
 
+const REGEXP_GOAL_TITLE = /<title>(.*?)<\/title>/g;
+
 class App {
     constructor(private config: Config) {
     }
 
     async run() {
+        const goalTitle = await this.readGoalTitle(this.config.goalId);
         const posts = await this.readGoalPosts(this.config.goalId);
+        const goalInfo = {
+            id: this.config.goalId,
+            title: goalTitle,
+            posts
+        };
         fs.mkdirSync('data', { recursive: true });
         const filePath = 'data/' + this.config.goalId + '.json';
-        fs.writeFileSync(filePath, JSON.stringify(posts, null, '\t'));
+        fs.writeFileSync(filePath, JSON.stringify(goalInfo, null, '\t'));
+    }
+
+    private async readGoalTitle(goalId: string) {
+        let url = smartProgressUrl + '/goal/' + encodeURIComponent(goalId);
+        const response = await fetch(url);
+        if (!response.ok) {
+            const text = await response.text();
+            throw new Error('Could not load goal title: ' + response.statusText + '\n' + text);
+        }
+        const html = await response.text();
+        const title = html.matchAll(REGEXP_GOAL_TITLE).next().value[1];
+        return title;
     }
 
     private async readGoalPosts(goalId: string) {

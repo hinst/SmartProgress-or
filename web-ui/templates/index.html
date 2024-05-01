@@ -9,10 +9,10 @@
         {{template "w3-theme-black.css"}}
     </style>
 </head>
-<body>
+<body class="w3-theme-dark">
     <script type="text/javascript">
-        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-            document.body.classList.add('w3-theme-dark');
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
+            document.body.classList.remove('w3-theme-dark');
         }
         window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
             if (e.matches)
