@@ -9,5 +9,5 @@
 					window 1s
 			}
 	}
-	reverse_proxy /smartProgress-or* smart-progress-or-web-ui:8080
+	reverse_proxy /smartProgress-or* web-ui.smart-progress-or.svc.cluster.local:8080
 }

@@ -1,11 +1,12 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: smart-progress-or-web-ui
+  name: web-ui
   labels:
-    app: smart-progress-or-web-ui
+    app: web-ui
+  namespace: smart-progress-or
 spec:
   ports:
   - port: 8080
   selector:
-    app: smart-progress-or-web-ui
+    app: web-ui
