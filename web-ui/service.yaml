@@ -5,10 +5,7 @@ metadata:
   labels:
     app: smart-progress-or-web-ui
 spec:
-  type: NodePort
   ports:
   - port: 8080
-    nodePort: 30001
-    protocol: TCP
   selector:
     app: smart-progress-or-web-ui
