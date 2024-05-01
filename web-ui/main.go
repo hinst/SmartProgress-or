@@ -13,5 +13,5 @@ func main() {
 		templatesDirectory: "templates",
 	}
 	webApp.Start()
-	http.ListenAndServe(":8080", nil)
+	AssertError(http.ListenAndServe(":8080", nil))
 }
