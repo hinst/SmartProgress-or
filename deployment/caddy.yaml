@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-router
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: web-router
+  minReadySeconds: 1
+  strategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: web-router
+    spec:
+      containers:
+      - name: caddy
+        image: caddy
+        ports:
+        - containerPort: 80

@@ -1,0 +1,2 @@
+:80
+reverse_proxy /smartProgress-or* localhost:9000
