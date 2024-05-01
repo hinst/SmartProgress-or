@@ -1,1 +1,1 @@
-docker run -it --rm hinst/smart-progress-or-web-ui
+docker run -it --rm -p 8080:8080 hinst/smart-progress-or-web-ui
