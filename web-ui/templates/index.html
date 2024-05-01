@@ -1,32 +1,5 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Progress-or</title>
-    <style>
-        {{template "w3.css"}}
-        {{template "w3-theme-black.css"}}
-    </style>
-</head>
-<body class="w3-theme-dark">
-    <script type="text/javascript">
-        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
-            document.body.classList.remove('w3-theme-dark');
-        }
-        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
-            if (e.matches)
-                document.body.classList.add('w3-theme-dark');
-            else
-                document.body.classList.remove('w3-theme-dark');
-        });
-    </script>
-    <h1 class="w3-container w3-black" style="margin-top: 0">
-        Smart Progress-or
-    </h1>
-    <div class="w3-container">
-        Lorem ipsum
-    </div>
-</body>
-</html>
-
+<ul>
+{{range $element := .Goals}}
+    <li>{{$element.Title}}</li>
+{{end}}
+</ul>
