@@ -1,2 +1,15 @@
-:80
-reverse_proxy /smartProgress-or* localhost:9000
+{
+	order rate_limit before basicauth
+}
+:80 {
+    rate_limit {
+		rate_limit {
+				zone dynamic_zone {
+						key {http.request.remote_ip}
+						events 10
+						window 1s
+				}
+		}
+        reverse_proxy /smartProgress-or* localhost:9000
+    }
+}
