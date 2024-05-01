@@ -9,7 +9,7 @@ func main() {
 	log.Println("Starting...")
 	var webApp = &webApp{
 		path:               "/smartProgress-or",
-		dataDirectory:      "../downloader/data",
+		dataDirectory:      "data",
 		templatesDirectory: "templates",
 	}
 	webApp.Start()

@@ -1,0 +1,1 @@
+docker run -it --rm hinst/smart-progress-or-web-ui

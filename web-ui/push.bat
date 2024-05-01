@@ -1,0 +1,1 @@
+docker push hinst/smart-progress-or-web-ui
