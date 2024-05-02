@@ -4,8 +4,7 @@ import { requireString } from './string';
 import * as Smart from './smartProgress';
 import { smartProgressHost, smartProgressUrl } from './smartProgress';
 import fs from 'fs';
-import { GoalInfo } from './goalInfo';
-import { GoalHeader } from './goalHeader';
+import { GoalHeader, GoalInfo } from './goalInfo';
 
 const REGEXP_GOAL_TITLE = /<title>(.*?)<\/title>/g;
 
@@ -49,11 +48,12 @@ class App {
             const newPostCount = goalInfo.merge(existingGoalInfo);
             console.log('Merged ' + goalId + '. New post count: ' + newPostCount);
         }
-        fs.writeFileSync(filePath, JSON.stringify(goalInfo, null, '\t'));
         const goalAuthor = goalInfo.posts[0]?.username || '';
         const goalHeader = new GoalHeader(goalId, goalInfo.title, goalInfo.posts.length, new Date().toISOString(), goalAuthor);
-        fs.mkdirSync('data/headers', { recursive: true });
         const headerFilePath = 'data/headers/' + goalId + '.json';
+
+        fs.mkdirSync('data/headers', { recursive: true });
+        fs.writeFileSync(filePath, JSON.stringify(goalInfo, null, '\t'));
         fs.writeFileSync(headerFilePath, JSON.stringify(goalHeader, null, '\t'));
     }
 
