@@ -1,3 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: downloader-config
+  namespace: smart-progress-or
+data:
+  goalId: '247488,416007'
+---
 apiVersion: batch/v1
 kind: CronJob
 metadata:
@@ -24,5 +32,8 @@ spec:
                 mountPath: /app/data
             env:
               - name: goalId
-                value: '247488,416007'
+                valueFrom:
+                  configMapKeyRef:
+                    name: downloader-config
+                    key: goalId
           restartPolicy: Never
