@@ -4,6 +4,7 @@ import { requireString } from './string';
 import * as Smart from './smartProgress';
 import { smartProgressHost, smartProgressUrl } from './smartProgress';
 import fs from 'fs';
+import { GoalInfo } from './goalInfo';
 
 const REGEXP_GOAL_TITLE = /<title>(.*?)<\/title>/g;
 
@@ -14,20 +15,29 @@ class App {
     async run() {
         var goalIds = this.config.goalId.split(',');
         for (let goalId of goalIds) {
-            await this.readGoal(goalId);
+            try {
+                await this.readGoal(goalId);
+            } catch (e) {
+                console.error('Cannot read goal ' + goalId, e);
+            }
         }
     }
 
     private async readGoal(goalId: string) {
         const goalTitle = await this.readGoalTitle(goalId);
         const posts = await this.readGoalPosts(goalId);
-        const goalInfo = {
-            id: goalId,
-            title: goalTitle,
-            posts
-        };
+        const goalInfo = new GoalInfo(goalId, goalTitle, posts);
         fs.mkdirSync('data', { recursive: true });
+        this.saveGoal(goalId, goalInfo);
+    }
+
+    private saveGoal(goalId: string, goalInfo: GoalInfo) {
         const filePath = 'data/' + goalId + '.json';
+        if (fs.existsSync(filePath)) {
+            const existingGoalInfo = JSON.parse(fs.readFileSync(filePath).toString());
+            const newPostCount = goalInfo.merge(existingGoalInfo);
+            console.log('Merged ' + goalId + '. New post count: ' + newPostCount);
+        }
         fs.writeFileSync(filePath, JSON.stringify(goalInfo, null, '\t'));
     }
 
