@@ -8,6 +8,24 @@ import { GoalInfo } from './goalInfo';
 
 const REGEXP_GOAL_TITLE = /<title>(.*?)<\/title>/g;
 
+interface GetCommentsResponse {
+    /** Should be "success" */
+    status: string;
+    comments: Comment[];
+}
+
+async function getDataUrlFromBlob(data: Blob): Promise<string> {
+    const reader = new FileReader();
+    reader.readAsDataURL(data);
+    return new Promise<string>((resolve, reject) => {
+        reader.onloadend = () => {
+            const dataUrl = reader.result?.toString();
+            resolve(dataUrl || '');
+        };
+        reader.onerror = event => reject(event);
+    });
+}
+
 class App {
     constructor(private config: Config) {
     }
@@ -64,7 +82,42 @@ class App {
             } else
                 break;
         }
+        for (const post of allPosts) {
+            if (post.comments && post.comments.length < parseInt(post.count_comments)) {
+                post.comments = (await this.readComments(post.id)).comments;
+            }
+            if (post.images && post.images.length)
+                await this.readImages(post);
+        }
         return allPosts;
+    }
+
+    async readComments(postId: string): Promise<GetCommentsResponse> {
+        let url = smartProgressUrl + '/blog/getComments?post_id=' + postId;
+        const response = await fetch(url, {
+            headers: {
+                Accept: 'application/json',
+                Host: smartProgressHost
+            }
+        });
+        if (!response.ok) {
+            const text = await response.text();
+            throw new Error('Could not read comments: ' + response.statusText + '\n' + text);
+        }
+        return await response.json();
+    }
+
+    async readImages(post: Smart.Post) {
+        for (const image of post.images) {
+            let url = smartProgressUrl + image.url;
+            const response = await fetch(url, {
+                headers: {
+                    Host: smartProgressHost
+                }
+            });
+            const blob = await response.blob();
+            image.dataUrl = await getDataUrlFromBlob(blob);
+        }
     }
 
     private async readPosts(goalId: string, startId: string): Promise<Smart.Posts> {
