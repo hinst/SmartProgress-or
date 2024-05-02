@@ -1,1 +1,1 @@
-call build.bat && call push.bat
+node_modules\.bin\tsc && call build.bat && call push.bat
