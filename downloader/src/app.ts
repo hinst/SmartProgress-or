@@ -14,16 +14,8 @@ interface GetCommentsResponse {
     comments: Comment[];
 }
 
-async function getDataUrlFromBlob(data: Blob): Promise<string> {
-    const reader = new FileReader();
-    reader.readAsDataURL(data);
-    return new Promise<string>((resolve, reject) => {
-        reader.onloadend = () => {
-            const dataUrl = reader.result?.toString();
-            resolve(dataUrl || '');
-        };
-        reader.onerror = event => reject(event);
-    });
+async function getDataUrlFromBlob(data: Blob, contentType: string): Promise<string> {
+    return 'data:' + contentType + ';base64,' + Buffer.from(await data.arrayBuffer()).toString('base64');
 }
 
 class App {
@@ -116,7 +108,8 @@ class App {
                 }
             });
             const blob = await response.blob();
-            image.dataUrl = await getDataUrlFromBlob(blob);
+            const contentType = response.headers.get('Content-Type') || '';
+            image.dataUrl = await getDataUrlFromBlob(blob, contentType);
         }
     }
 
