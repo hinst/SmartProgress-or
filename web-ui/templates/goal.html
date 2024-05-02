@@ -1,1 +1,12 @@
-<h1>Goal</h1>
+{{range $element := .Goal.Posts}}
+    <div class="w3-dark-grey" style="padding-left: 4px; padding-right: 4px">
+        {{$element.Date}}
+        <div class="w3-black" style="display: inline-block; padding-left: 4px; padding-right: 4px">
+            {{$element.Type}}
+        </div>
+        {{$element.Username}}
+    </div>
+    <div class="w3-panel w3-leftbar w3-border-dark-grey" style="margin-top: 0">
+        {{$element.Content}}
+    </div>
+{{end}}

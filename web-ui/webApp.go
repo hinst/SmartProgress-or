@@ -16,6 +16,7 @@ type webApp struct {
 	indexTemplate    *template.Template
 	layoutTemplate   *template.Template
 	notFoundTemplate *template.Template
+	goalTemplate     *template.Template
 }
 
 func (me *webApp) Start() {
@@ -27,6 +28,7 @@ func (me *webApp) loadTemplates() {
 	me.layoutTemplate = me.loadTemplate("layout.html")
 	me.indexTemplate = me.loadTemplate("index.html")
 	me.notFoundTemplate = me.loadTemplate("notFound.html")
+	me.goalTemplate = me.loadTemplate("goal.html")
 }
 
 func (me *webApp) registerFunctions() {
@@ -40,6 +42,7 @@ func (me *webApp) loadTemplate(fileName string) *template.Template {
 
 func (me *webApp) getLayoutPage(page Page) string {
 	var buffer = new(strings.Builder)
+	page.BaseUrl = me.path
 	AssertError(me.layoutTemplate.Execute(buffer, page))
 	return buffer.String()
 }
@@ -50,10 +53,11 @@ func (me *webApp) getMainPage(writer http.ResponseWriter, request *http.Request)
 	pageData.BaseUrl = me.path
 	AssertError(me.indexTemplate.Execute(textBuilder, pageData))
 	var pageText = me.getLayoutPage(Page{
-		BaseUrl: me.path,
 		Title:   "Goals",
 		Content: template.HTML(textBuilder.String()),
 	})
+	writer.WriteHeader(http.StatusOK)
+	writer.Header().Add(contentType, contentTypeTextHtml)
 	writer.Write([]byte(pageText))
 }
 
@@ -78,10 +82,27 @@ func (me *webApp) getGoalPage(writer http.ResponseWriter, request *http.Request)
 	if _, err := os.Stat(filePath); os.IsNotExist(err) {
 		writer.WriteHeader(http.StatusNotFound)
 		var pageText = me.getLayoutPage(Page{
-			BaseUrl: me.path,
 			Title:   "Goal not found",
 			Content: template.HTML("Goal not found"),
 		})
+		writer.Header().Add(contentType, contentTypeTextHtml)
 		writer.Write([]byte(pageText))
 	}
+	var fileContent = AssertResultError(os.ReadFile(filePath))
+	var theGoal = new(goalInfo)
+	AssertError(json.Unmarshal(fileContent, theGoal))
+	var textBuilder = new(strings.Builder)
+	var pageData = goalPageData{Goal: theGoal}
+	for i := range theGoal.Posts {
+		theGoal.Posts[i].Content = template.HTML(theGoal.Posts[i].Msg)
+	}
+	pageData.BaseUrl = me.path
+	AssertError(me.goalTemplate.Execute(textBuilder, pageData))
+	var pageText = me.getLayoutPage(Page{
+		Title:   theGoal.Title,
+		Content: template.HTML(textBuilder.String()),
+	})
+	writer.WriteHeader(http.StatusOK)
+	writer.Header().Add(contentType, contentTypeTextHtml)
+	writer.Write([]byte(pageText))
 }
