@@ -48,7 +48,7 @@ class App {
             const newPostCount = goalInfo.merge(existingGoalInfo);
             console.log('Merged ' + goalId + '. New post count: ' + newPostCount);
         }
-        const goalAuthor = goalInfo.posts[0]?.username || '';
+        const goalAuthor = goalInfo.posts?.find(post => post.type === 'post')?.username || '';
         const goalHeader = new GoalHeader(goalId, goalInfo.title, goalInfo.posts.length, new Date().toISOString(), goalAuthor);
         const headerFilePath = 'data/headers/' + goalId + '.json';
 
