@@ -6,12 +6,13 @@ import (
 )
 
 func main() {
-	log.Println("Starting...")
+	const listenAddress = ":8080"
+	log.Println("Starting at " + listenAddress)
 	var webApp = &webApp{
 		path:               "/smartProgress-or",
 		dataDirectory:      "data",
 		templatesDirectory: "templates",
 	}
 	webApp.Start()
-	AssertError(http.ListenAndServe(":8080", nil))
+	AssertError(http.ListenAndServe(listenAddress, nil))
 }

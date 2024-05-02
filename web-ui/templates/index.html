@@ -3,6 +3,20 @@ Goals [{{len .Goals}}]
 {{range $element := .Goals}}
     <li title="Goal id: {{$element.Id}}">
         <a href="{{$.BaseUrl}}/goals?id={{$element.Id}}">{{$element.Title}}</a>
+        <ul>
+            <li>
+                <span class="w3-dark-grey" style="padding-left: 3px; padding-right: 3px">Author</span>
+                {{$element.Author}}
+            </li>
+            <li>
+                <span class="w3-dark-grey" style="padding-left: 3px; padding-right: 3px">Post count</span>
+                {{$element.PostCount}}
+            </li>
+            <li>
+                <span class="w3-dark-grey" style="padding-left: 3px; padding-right: 3px">Updated</span>
+                {{$element.UpdatedAt}}
+            </li>
+        </ul>
     </li>
 {{end}}
 </ul>

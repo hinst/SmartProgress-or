@@ -60,7 +60,10 @@ func (me *webApp) getMainPage(writer http.ResponseWriter, request *http.Request)
 func (me *webApp) getGoals() (goals []goalHeader) {
 	var files = AssertResultError(os.ReadDir(me.dataDirectory))
 	for _, file := range files {
-		var filePath = me.dataDirectory + "/" + file.Name()
+		if file.IsDir() {
+			continue
+		}
+		var filePath = me.dataDirectory + "/headers/" + file.Name()
 		var fileContent = AssertResultError(os.ReadFile(filePath))
 		var theGoal = new(goalHeader)
 		AssertError(json.Unmarshal(fileContent, theGoal))
