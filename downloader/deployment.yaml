@@ -1,7 +1,7 @@
 apiVersion: batch/v1
 kind: CronJob
 metadata:
-  name: smart-progress-do-downloader
+  name: downloader
   namespace: smart-progress-or
 spec:
   schedule: "0 * * * *"
@@ -16,7 +16,7 @@ spec:
               persistentVolumeClaim:
                 claimName: smart-progress-or
           containers:
-          - name: smart-progress-do-downloader
+          - name: downloader
             image: hinst/smart-progress-do-downloader:latest
             imagePullPolicy: Always
             volumeMounts:
