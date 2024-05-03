@@ -15,11 +15,18 @@ spec:
       labels:
         app: web-router
     spec:
+      volumes:
+      - name: web-router-config
+        configMap:
+          name: web-router-config
       containers:
       - name: caddy
         image: hinst/orange-caddy
         ports:
         - containerPort: 80
+        volumeMounts:
+        - name: web-router-config
+          mountPath: /etc/caddy
 ---
 apiVersion: v1
 kind: Service
