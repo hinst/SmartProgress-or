@@ -1,14 +1,31 @@
-{{range $element := .Goal.Posts}}
-    <div class="w3-dark-grey" style="padding-left: 4px; padding-right: 4px">
-        {{$element.Date}}
+{{range $goal := .Goal.Posts}}
+    <div class="w3-dark-grey" style="padding-left: 10px">
+        {{$goal.Date}}
         <div class="w3-black" style="display: inline-block; padding-left: 4px; padding-right: 4px">
-            {{$element.Type}}
+            {{$goal.Type}}
         </div>
-        {{$element.Username}}
+        {{$goal.Username}}
     </div>
     <div class="w3-panel w3-leftbar w3-border-dark-grey" style="margin-top: 0">
-        {{$element.Content}}
-        {{range $comment := $element.Comments}}
+        {{$goal.Content}}
+        {{if ne (len $goal.Images) 0}}
+            {{range $image := $goal.Images}}
+                <a href="{{$image.DataUrl}}" target="_blank">
+                    <img src="{{$image.DataUrl}}" height="150" class="w3-margin-right">
+                </a>
+            {{end}}
+        {{end}}
+        <div class="w3-margin-top"></div>
+        {{if ne (len $goal.Comments) 0}}
+            <div class="w3-dark-grey" style="padding-left: 10px">Comments: {{len $goal.Comments}}</div>
+            {{range $comment := $goal.Comments}}
+                <div class="w3-margin-top">
+                    <b>{{$comment.User.Username}}:</b>
+                </div>
+                <div class="w3-panel w3-leftbar w3-border-dark-grey" style="padding-left: 10px; margin-bottom: 0">
+                    {{$comment.Content}}
+                </div>
+            {{end}}
         {{end}}
     </div>
 {{end}}

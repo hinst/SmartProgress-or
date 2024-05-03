@@ -27,6 +27,7 @@ type smartPost struct {
 	Type     string         `json:"type"`
 	Content  template.HTML  `json:"-"`
 	Comments []smartComment `json:"comments"`
+	Images   []smartImage   `json:"images"`
 }
 
 type smartComment struct {
@@ -38,4 +39,8 @@ type smartComment struct {
 type smartUser struct {
 	Id       string `json:"id"`
 	Username string `json:"username"`
+}
+
+type smartImage struct {
+	DataUrl template.URL `json:"dataUrl"`
 }

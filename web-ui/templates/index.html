@@ -1,20 +1,20 @@
 Goals [{{len .Goals}}]
 <ul style="margin-top: 4px">
-{{range $element := .Goals}}
-    <li title="Goal id: {{$element.Id}}">
-        <a href="{{$.BaseUrl}}/goals?id={{$element.Id}}">{{$element.Title}}</a>
+{{range $goal := .Goals}}
+    <li title="Goal id: {{$goal.Id}}">
+        <a href="{{$.BaseUrl}}/goals?id={{$goal.Id}}">{{$goal.Title}}</a>
         <ul>
             <li>
                 <span class="w3-dark-grey" style="padding-left: 3px; padding-right: 3px">Author</span>
-                {{$element.Author}}
+                {{$goal.Author}}
             </li>
             <li>
                 <span class="w3-dark-grey" style="padding-left: 3px; padding-right: 3px">Post count</span>
-                {{$element.PostCount}}
+                {{$goal.PostCount}}
             </li>
             <li>
                 <span class="w3-dark-grey" style="padding-left: 3px; padding-right: 3px">Updated</span>
-                {{$element.UpdatedAt.Format "2006 Jan 02"}}
+                {{$goal.UpdatedAt.Format "2006 Jan 02"}}
             </li>
         </ul>
     </li>
