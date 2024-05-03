@@ -1,6 +1,10 @@
 export const smartProgressHost = 'smartprogress.do';
 export const smartProgressUrl = 'https://' + smartProgressHost;
 
+export interface Posts {
+    blog: Post[];
+}
+
 export interface Post {
     /** Can be: 'post' */
     type: string;
@@ -16,6 +20,12 @@ export interface Post {
     username: string;
 }
 
-export interface Posts {
-    blog: Post[];
+export interface User {
+    id: string;
+    username: string;
+}
+
+export interface Comment {
+    msg: string;
+    user: User;
 }

@@ -93,10 +93,8 @@ func (me *webApp) getGoalPage(writer http.ResponseWriter, request *http.Request)
 	AssertError(json.Unmarshal(fileContent, theGoal))
 	var textBuilder = new(strings.Builder)
 	var pageData = goalPageData{Goal: theGoal}
-	for i := range theGoal.Posts {
-		theGoal.Posts[i].Content = template.HTML(theGoal.Posts[i].Msg)
-	}
 	pageData.BaseUrl = me.path
+	pageData.prepare()
 	AssertError(me.goalTemplate.Execute(textBuilder, pageData))
 	var pageText = me.getLayoutPage(Page{
 		Title:   theGoal.Title,

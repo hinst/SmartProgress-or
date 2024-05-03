@@ -2,7 +2,7 @@ import 'source-map-support/register';
 import { Config } from './config';
 import { requireString } from './string';
 import * as Smart from './smartProgress';
-import { smartProgressHost, smartProgressUrl } from './smartProgress';
+import { smartProgressHost, smartProgressUrl, Comment } from './smartProgress';
 import fs from 'fs';
 import { GoalHeader, GoalInfo } from './goalInfo';
 
