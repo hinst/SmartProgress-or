@@ -2,6 +2,7 @@
 	order rate_limit before basicauth
 }
 :80 {
+	encode zstd gzip
 	rate_limit {
 			zone dynamic_zone {
 					key static
