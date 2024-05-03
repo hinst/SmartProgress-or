@@ -19,6 +19,9 @@ spec:
       - name: web-router-config
         configMap:
           name: web-router-config
+      - name: web-router-favicon
+        configMap:
+          name: web-router-favicon
       containers:
       - name: caddy
         image: hinst/orange-caddy
@@ -27,6 +30,8 @@ spec:
         volumeMounts:
         - name: web-router-config
           mountPath: /etc/caddy
+        - name: web-router-favicon
+          mountPath: /usr/share/caddy/favicon
 ---
 apiVersion: v1
 kind: Service
