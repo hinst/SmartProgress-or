@@ -44,8 +44,12 @@ class App {
     private saveGoal(goalId: string, goalInfo: GoalInfo) {
         const filePath = 'data/' + goalId + '.json';
         if (fs.existsSync(filePath)) {
-            const existingGoalInfo = JSON.parse(fs.readFileSync(filePath).toString());
-            const newPostCount = goalInfo.merge(existingGoalInfo);
+            const existingGoalInfo = Object.assign(
+                new GoalInfo('', '', []),
+                JSON.parse(fs.readFileSync(filePath).toString())
+            );
+            const newPostCount = existingGoalInfo.merge(goalInfo);
+            goalInfo = existingGoalInfo;
             console.log('Merged ' + goalId + '. New post count: ' + newPostCount);
         }
         const goalAuthor = goalInfo.posts?.find(post => post.type === 'post')?.username || '';

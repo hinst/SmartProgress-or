@@ -15,9 +15,9 @@ export class GoalInfo {
         if (other.title.length)
             this.title = other.title;
         let newPostCount = 0;
-        for (const post of other.posts) {
-            if (!this.posts.find(p => p.id === post.id)) {
-                this.posts.push(post);
+        for (const otherPost of other.posts) {
+            if (!this.posts.find(thisPost => thisPost.id === otherPost.id)) {
+                this.posts.push(otherPost);
                 newPostCount++;
             }
         }

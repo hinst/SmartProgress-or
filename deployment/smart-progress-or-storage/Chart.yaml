@@ -1,0 +1,5 @@
+apiVersion: v2
+name: smart-progress-or-storage
+description: SmartProgress-or storage
+type: application
+version: 0.1.0

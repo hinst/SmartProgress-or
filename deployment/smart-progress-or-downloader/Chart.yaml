@@ -1,0 +1,5 @@
+apiVersion: v2
+name: smart-progress-or-downloader
+description: SmartProgress-or downloader
+type: application
+version: 0.1.0
