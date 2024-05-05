@@ -14,5 +14,4 @@
 	encode zstd gzip
 	reverse_proxy /smartProgress-or* web-ui.smart-progress-or.svc.cluster.local:8080
 	file_server
-	log
 }
