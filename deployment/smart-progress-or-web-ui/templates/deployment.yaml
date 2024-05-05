@@ -40,6 +40,9 @@ spec:
             mountPath: /app/data
             readOnly: true
         resources:
+          requests:
+            cpu: 1m
+            memory: 1
           limits:
             cpu: 1
             memory: 100Mi

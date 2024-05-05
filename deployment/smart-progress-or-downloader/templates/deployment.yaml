@@ -32,6 +32,9 @@ spec:
                     name: downloader-config
                     key: goalId
             resources:
+              requests:
+                cpu: 1m
+                memory: 1
               limits:
                 cpu: 1
                 memory: 300Mi
