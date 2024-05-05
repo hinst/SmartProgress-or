@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"html/template"
 	"net/http"
 	"os"
@@ -68,9 +67,7 @@ func (me *webApp) getGoals() (goals []goalHeader) {
 			continue
 		}
 		var filePath = me.dataDirectory + "/headers/" + file.Name()
-		var fileContent = AssertResultError(os.ReadFile(filePath))
-		var theGoal = new(goalHeader)
-		AssertError(json.Unmarshal(fileContent, theGoal))
+		var theGoal = readJsonFile(filePath, new(goalHeader))
 		goals = append(goals, *theGoal)
 	}
 	return
@@ -88,9 +85,7 @@ func (me *webApp) getGoalPage(writer http.ResponseWriter, request *http.Request)
 		writer.Header().Add(contentType, contentTypeTextHtml)
 		writer.Write([]byte(pageText))
 	}
-	var fileContent = AssertResultError(os.ReadFile(filePath))
-	var theGoal = new(goalInfo)
-	AssertError(json.Unmarshal(fileContent, theGoal))
+	var theGoal = readJsonFile(filePath, new(goalInfo))
 	var textBuilder = new(strings.Builder)
 	var pageData = goalPageData{Goal: theGoal}
 	pageData.BaseUrl = me.path
