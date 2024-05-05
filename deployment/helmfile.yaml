@@ -16,3 +16,7 @@ releases:
   chart: smart-progress-or-web-ui
   namespace: smart-progress-or
   installed: true
+- name: dashboard-account
+  chart: dashboard-account
+  namespace: default
+  installed: true
