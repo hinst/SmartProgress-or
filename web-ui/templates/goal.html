@@ -10,9 +10,7 @@
         {{$goal.Content}}
         {{if ne (len $goal.Images) 0}}
             {{range $image := $goal.Images}}
-                <a href="{{$image.DataUrl}}" target="_blank">
-                    <img src="{{$image.DataUrl}}" height="150" class="w3-margin-right">
-                </a>
+                <img src="{{$image.DataUrl}}" height="150" class="w3-margin-right">
             {{end}}
         {{end}}
         <div class="w3-margin-top"></div>
