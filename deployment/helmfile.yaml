@@ -3,6 +3,10 @@ releases:
   chart: web-router
   namespace: default
   installed: true
+- name: dashboard-account
+  chart: dashboard-account
+  namespace: default
+  installed: true
 
 - name: smart-progress-or-downloader
   chart: smart-progress-or-downloader
@@ -15,8 +19,4 @@ releases:
 - name: smart-progress-or-web-ui
   chart: smart-progress-or-web-ui
   namespace: smart-progress-or
-  installed: true
-- name: dashboard-account
-  chart: dashboard-account
-  namespace: default
   installed: true
