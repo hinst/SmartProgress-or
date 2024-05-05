@@ -31,4 +31,8 @@ spec:
                   configMapKeyRef:
                     name: downloader-config
                     key: goalId
+            resources:
+              limits:
+                cpu: 1
+                memory: 300Mi
           restartPolicy: Never

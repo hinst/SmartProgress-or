@@ -36,3 +36,7 @@ spec:
           mountPath: /etc/caddy
         - name: web-router-favicon
           mountPath: /usr/share/caddy/favicon
+        resources:
+          limits:
+            cpu: 1
+            memory: 200Mi
