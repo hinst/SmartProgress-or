@@ -5,3 +5,6 @@ releases:
 - name: smart-progress-or-storage
   chart: smart-progress-or-storage
   namespace: smart-progress-or
+- name: smart-progress-or-web-ui
+  chart: smart-progress-or-web-ui
+  namespace: smart-progress-or
