@@ -32,18 +32,3 @@ spec:
           mountPath: /etc/caddy
         - name: web-router-favicon
           mountPath: /usr/share/caddy/favicon
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: web-router
-  labels:
-    app: web-router
-spec:
-  type: NodePort
-  ports:
-  - port: 80
-    nodePort: 30001
-    protocol: TCP
-  selector:
-    app: web-router

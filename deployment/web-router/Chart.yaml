@@ -1,0 +1,5 @@
+apiVersion: v2
+name: web-router
+description: Web router for Orange Pi 2W deployment
+type: application
+version: 0.1.0

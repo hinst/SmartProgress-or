@@ -1,4 +1,9 @@
 releases:
+- name: web-router
+  chart: web-router
+  namespace: default
+  installed: true
+
 - name: smart-progress-or-downloader
   chart: smart-progress-or-downloader
   namespace: smart-progress-or
