@@ -17,6 +17,10 @@ spec:
       labels:
         app: web-ui
     spec:
+      securityContext:
+        allowPrivilegeEscalation: false
+        runAsNonRoot: true
+        runAsUser: 1000
       volumes:
         - name: data
           persistentVolumeClaim:
