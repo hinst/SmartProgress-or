@@ -1,9 +1,12 @@
-<div class="w3-panel w3-leftbar" style="margin-top: 0px; margin-bottom: 16px; font-size: 17px">
-    SHOWING POSTS: {{.Offset}}...{{.OffsetEnd}} of {{.TotalCount}}; PAGES:
-    {{ range $index, $offset := .Pages }}
-        <a class="w3-btn w3-black" style="padding: 2px 8px 2px 8px" href="{{$.BaseUrl}}/goals?id={{$.Id}}&offset={{$offset}}"><u>{{$index}}</u></a>
-    {{end}}
-</div>
+{{define "pager"}}
+    <div class="w3-panel w3-leftbar" style="margin-top: 0px; margin-bottom: 16px; font-size: 17px">
+        SHOWING POSTS: {{.Offset}}...{{.OffsetEnd}} of {{.TotalCount}}; PAGES:
+        {{ range $index, $offset := .Pages }}
+            <a class="w3-btn w3-black" style="padding: 2px 8px 2px 8px" href="{{$.BaseUrl}}/goals?id={{$.Id}}&offset={{$offset}}"><u>{{$index}}</u></a>
+        {{end}}
+    </div>
+{{end}}
+{{template "pager" $}}
 {{range $post := .Posts}}
     <div class="w3-dark-grey" style="padding-left: 10px">
         {{$post.Date}}
@@ -32,4 +35,7 @@
             {{end}}
         {{end}}
     </div>
+{{end}}
+{{if eq (len .Posts) .PageSize}}
+{{template "pager" $}}
 {{end}}
