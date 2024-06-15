@@ -1,0 +1,17 @@
+{
+	"folders": [
+		{
+			"name": "deployment",
+			"path": "deployment"
+		},
+		{
+			"name": "downloader",
+			"path": "downloader"
+		},
+		{
+			"name": "web-ui",
+			"path": "web-ui"
+		}
+	],
+	"settings": {}
+}
