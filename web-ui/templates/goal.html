@@ -1,9 +1,14 @@
-SHOWING POSTS {{.Offset}}...{{.OffsetEnd}}<br><br>
+<div class="w3-panel w3-leftbar" style="margin-top: 0px; margin-bottom: 16px; font-size: 17px">
+    SHOWING POSTS: {{.Offset}}...{{.OffsetEnd}} of {{.TotalCount}}; PAGES:
+    {{ range $index, $offset := .Pages }}
+        <a class="w3-btn w3-black" style="padding: 2px 8px 2px 8px" href="{{$.BaseUrl}}/goals?id={{$.Id}}&offset={{$offset}}"><u>{{$index}}</u></a>
+    {{end}}
+</div>
 {{range $post := .Posts}}
     <div class="w3-dark-grey" style="padding-left: 10px">
         {{$post.Date}}
-        <div class="w3-black" style="display: inline-block; padding-left: 4px; padding-right: 4px">
-            {{$post.Type}}
+        <div class="w3-grey" style="display: inline-block; padding-left: 4px; padding-right: 4px">
+            <b>{{$post.Type}}</b>
         </div>
         {{$post.Username}}
     </div>

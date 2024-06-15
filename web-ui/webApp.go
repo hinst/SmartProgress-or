@@ -17,11 +17,13 @@ type webApp struct {
 	layoutTemplate   *template.Template
 	notFoundTemplate *template.Template
 	goalTemplate     *template.Template
+	headerFileName   string
 }
 
 func (me *webApp) Start() {
 	me.loadTemplates()
 	me.registerFunctions()
+	me.headerFileName = "_header.json"
 }
 
 func (me *webApp) loadTemplates() {
@@ -65,7 +67,7 @@ func (me *webApp) getGoals() (goals []goalHeader) {
 	var files = AssertResultError(os.ReadDir(me.dataDirectory))
 	for _, file := range files {
 		if file.IsDir() {
-			var filePath = me.dataDirectory + "/" + file.Name() + "/_header.json"
+			var filePath = me.dataDirectory + "/" + file.Name() + "/" + me.headerFileName
 			var theGoal = readJsonFile(filePath, new(goalHeader))
 			goals = append(goals, *theGoal)
 		}
@@ -77,7 +79,7 @@ func (me *webApp) getGoalHeader(goalId string) *goalHeader {
 	var file = me.dataDirectory + "/" + goalId
 	var fileStat, fileError = os.Stat(file)
 	if fileError == nil && fileStat.IsDir() {
-		var filePath = me.dataDirectory + "/" + fileStat.Name() + "/_header.json"
+		var filePath = me.dataDirectory + "/" + fileStat.Name() + "/" + me.headerFileName
 		return readJsonFile(filePath, new(goalHeader))
 	} else {
 		return nil
@@ -135,11 +137,10 @@ func (me *webApp) getGoalPage(responseWriter http.ResponseWriter, request *http.
 	var goalFiles, goalFilesError = os.ReadDir(goalDirectory)
 	AssertError(goalFilesError)
 	sortFilesByName(goalFiles)
-	var goalFileCount = 0
-	var pageData = goalPageData{Offset: offset}
+	var pageData = goalPageData{Offset: offset, PageSize: limit, Id: goalId}
 	for goalFileIndex, goalFile := range goalFiles {
-		if !goalFile.IsDir() {
-			goalFileCount++
+		if !goalFile.IsDir() && goalFile.Name() != me.headerFileName {
+			pageData.TotalCount++
 			if offset <= goalFileIndex && goalFileIndex < offset+limit {
 				var goalFile = goalDirectory + "/" + goalFile.Name()
 				var post = readJsonFile(goalFile, new(smartPost))

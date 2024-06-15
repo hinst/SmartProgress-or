@@ -9,9 +9,13 @@ type indexPageData struct {
 
 type goalPageData struct {
 	Page
-	Offset    int
-	OffsetEnd int
-	Posts     []smartPost
+	Id         string
+	Offset     int
+	OffsetEnd  int
+	TotalCount int
+	PageSize   int
+	Pages      []int
+	Posts      []smartPost
 }
 
 func (me *goalPageData) prepare() {
@@ -20,6 +24,14 @@ func (me *goalPageData) prepare() {
 		for iComment := range me.Posts[iPost].Comments {
 			me.Posts[iPost].Comments[iComment].Content = template.HTML(me.Posts[iPost].Comments[iComment].Msg)
 		}
+	}
+	var pageCount = me.TotalCount / me.PageSize
+	if me.TotalCount%me.PageSize > 0 {
+		pageCount++
+	}
+	me.Pages = nil
+	for i := range pageCount {
+		me.Pages = append(me.Pages, i*me.PageSize)
 	}
 	me.OffsetEnd = me.Offset + len(me.Posts)
 	me.Offset++
