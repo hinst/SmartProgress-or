@@ -94,18 +94,28 @@ func (me *webApp) getGoalNotFoundPage(responseWriter http.ResponseWriter, reques
 	responseWriter.Write([]byte(pageText))
 }
 
-func (me *webApp) getGoalPage(responseWriter http.ResponseWriter, request *http.Request) {
-	var goalId = request.URL.Query().Get("id")
+func (me *webApp) readOffset(responseWriter http.ResponseWriter, request *http.Request) (int, error) {
 	var offsetText = request.URL.Query().Get("offset")
-	var offset = 0
 	if len(offsetText) > 0 {
-		var offsetError error
-		offset, offsetError = strconv.Atoi(offsetText)
+		var offset, offsetError = strconv.Atoi(offsetText)
 		if offsetError != nil {
 			responseWriter.WriteHeader(http.StatusBadRequest)
 			responseWriter.Header().Add(contentType, contentTypeText)
 			responseWriter.Write([]byte("Offset must be a number"))
+			return 0, offsetError
+		} else {
+			return offset, nil
 		}
+	} else {
+		return 0, nil
+	}
+}
+
+func (me *webApp) getGoalPage(responseWriter http.ResponseWriter, request *http.Request) {
+	var goalId = request.URL.Query().Get("id")
+	var offset, offsetError = me.readOffset(responseWriter, request)
+	if offsetError != nil {
+		return
 	}
 	var limit = 10
 
@@ -123,23 +133,22 @@ func (me *webApp) getGoalPage(responseWriter http.ResponseWriter, request *http.
 	}
 
 	var goalFiles, goalFilesError = os.ReadDir(goalDirectory)
-	sortFilesByName(goalFiles)
 	AssertError(goalFilesError)
+	sortFilesByName(goalFiles)
 	var goalFileCount = 0
-	var posts []smartPost
+	var pageData = goalPageData{Offset: offset}
 	for goalFileIndex, goalFile := range goalFiles {
 		if !goalFile.IsDir() {
 			goalFileCount++
 			if offset <= goalFileIndex && goalFileIndex < offset+limit {
 				var goalFile = goalDirectory + "/" + goalFile.Name()
 				var post = readJsonFile(goalFile, new(smartPost))
-				posts = append(posts, *post)
+				pageData.Posts = append(pageData.Posts, *post)
 			}
 		}
 	}
 
 	var textBuilder = new(strings.Builder)
-	var pageData = goalPageData{Posts: posts}
 	pageData.BaseUrl = me.path
 	pageData.prepare()
 	AssertError(me.goalTemplate.Execute(textBuilder, pageData))

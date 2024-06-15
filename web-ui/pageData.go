@@ -9,7 +9,9 @@ type indexPageData struct {
 
 type goalPageData struct {
 	Page
-	Posts []smartPost
+	Offset    int
+	OffsetEnd int
+	Posts     []smartPost
 }
 
 func (me *goalPageData) prepare() {
@@ -19,4 +21,6 @@ func (me *goalPageData) prepare() {
 			me.Posts[iPost].Comments[iComment].Content = template.HTML(me.Posts[iPost].Comments[iComment].Msg)
 		}
 	}
+	me.OffsetEnd = me.Offset + len(me.Posts)
+	me.Offset++
 }
