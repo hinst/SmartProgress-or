@@ -1,6 +1,6 @@
 import 'source-map-support/register';
 import { Config } from './config';
-import { requireString } from './string';
+import { getDataUrlFromBlob, requireString } from './string';
 import * as Smart from './smartProgress';
 import { smartProgressHost, smartProgressUrl, Comment } from './smartProgress';
 import fs from 'fs';
@@ -14,12 +14,12 @@ interface GetCommentsResponse {
     comments: Comment[];
 }
 
-async function getDataUrlFromBlob(data: Blob, contentType: string): Promise<string> {
-    return 'data:' + contentType + ';base64,' + Buffer.from(await data.arrayBuffer()).toString('base64');
-}
-
 class App {
     constructor(private config: Config) {
+    }
+
+    private get dataDir(): string {
+        return 'data';
     }
 
     async run() {
@@ -34,31 +34,37 @@ class App {
     }
 
     private async readGoal(goalId: string) {
+        fs.mkdirSync(this.dataDir, { recursive: true });
         const goalTitle = await this.readGoalTitle(goalId);
-        const posts = await this.readGoalPosts(goalId);
-        const goalInfo = new GoalInfo(goalId, goalTitle, posts);
-        fs.mkdirSync('data', { recursive: true });
-        this.saveGoal(goalId, goalInfo);
+        let goalAuthor = '';
+        const postCount = await this.processGoalPosts(goalId, (post: Smart.Post) => {
+            if (post.type === 'post')
+                goalAuthor = post.username;
+            this.savePost(goalId, post);
+        });
+        this.saveGoalHeader(
+            new GoalHeader(
+                goalId,
+                goalTitle,
+                postCount,
+                new Date().toISOString(),
+                goalAuthor
+            )
+        );
     }
 
-    private saveGoal(goalId: string, goalInfo: GoalInfo) {
-        const filePath = 'data/' + goalId + '.json';
-        if (fs.existsSync(filePath)) {
-            const existingGoalInfo = Object.assign(
-                new GoalInfo('', '', []),
-                JSON.parse(fs.readFileSync(filePath).toString())
-            );
-            const newPostCount = existingGoalInfo.merge(goalInfo);
-            goalInfo = existingGoalInfo;
-            console.log('Merged ' + goalId + '. New post count: ' + newPostCount);
-        }
-        const goalAuthor = goalInfo.posts?.find(post => post.type === 'post')?.username || '';
-        const goalHeader = new GoalHeader(goalId, goalInfo.title, goalInfo.posts.length, new Date().toISOString(), goalAuthor);
-        const headerFilePath = 'data/headers/' + goalId + '.json';
+    private saveGoalHeader(header: GoalHeader) {
+        const goalDir = this.dataDir + '/' + header.id;
+        fs.mkdirSync(goalDir, { recursive: true });
+        fs.writeFileSync(goalDir + '/_header.json', JSON.stringify(header, null, '\t'));
+    }
 
-        fs.mkdirSync('data/headers', { recursive: true });
-        fs.writeFileSync(filePath, JSON.stringify(goalInfo, null, '\t'));
-        fs.writeFileSync(headerFilePath, JSON.stringify(goalHeader, null, '\t'));
+    private savePost(goalId: string, post: Smart.Post) {
+        const goalDir = this.dataDir + '/' + goalId;
+        fs.mkdirSync(goalDir, { recursive: true });
+        const fileFriendlyDate = post.date.replaceAll(' ', '_').replaceAll(':', '-');
+        const postFile = goalDir + '/' + fileFriendlyDate + '.json';
+        fs.writeFileSync(postFile, JSON.stringify(post, null, '\t'));
     }
 
     private async readGoalTitle(goalId: string) {
@@ -73,25 +79,28 @@ class App {
         return title;
     }
 
-    private async readGoalPosts(goalId: string) {
-        const allPosts: Smart.Post[] = [];
+    private async processGoalPosts(goalId: string, processPost: (post: Smart.Post) => void) {
         let startId = '0';
+        let totalPostCount = 0;
         while (true) {
-            const posts = await this.readPosts(goalId, startId);
-            if (posts?.blog?.length) {
-                allPosts.push(...posts.blog);
-                startId = posts.blog[posts.blog.length - 1].id;
+            const blogPosts = await this.readPosts(goalId, startId);
+            if (blogPosts?.blog?.length) {
+                const posts = blogPosts.blog;
+                for (const post of posts) {
+                    if (post.comments && post.comments.length < parseInt(post.count_comments)) {
+                        post.comments = (await this.readComments(post.id)).comments;
+                    }
+                    if (post.images && post.images.length)
+                        await this.readImages(post);
+                }
+                for (const post of posts)
+                    processPost(post);
+                totalPostCount += posts.length;
+                startId = blogPosts.blog[blogPosts.blog.length - 1].id;
             } else
                 break;
         }
-        for (const post of allPosts) {
-            if (post.comments && post.comments.length < parseInt(post.count_comments)) {
-                post.comments = (await this.readComments(post.id)).comments;
-            }
-            if (post.images && post.images.length)
-                await this.readImages(post);
-        }
-        return allPosts;
+        return totalPostCount;
     }
 
     async readComments(postId: string): Promise<GetCommentsResponse> {
