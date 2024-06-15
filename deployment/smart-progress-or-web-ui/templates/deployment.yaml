@@ -45,4 +45,4 @@ spec:
             memory: 1
           limits:
             cpu: 1
-            memory: 200Mi
+            memory: 20Mi
