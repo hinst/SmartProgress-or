@@ -64,11 +64,10 @@ func (me *webApp) getGoals() (goals []goalHeader) {
 	var files = AssertResultError(os.ReadDir(me.dataDirectory))
 	for _, file := range files {
 		if file.IsDir() {
-			continue
+			var filePath = me.dataDirectory + "/" + file.Name() + "/_header.json"
+			var theGoal = readJsonFile(filePath, new(goalHeader))
+			goals = append(goals, *theGoal)
 		}
-		var filePath = me.dataDirectory + "/headers/" + file.Name()
-		var theGoal = readJsonFile(filePath, new(goalHeader))
-		goals = append(goals, *theGoal)
 	}
 	return
 }
