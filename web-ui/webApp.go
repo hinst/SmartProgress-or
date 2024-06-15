@@ -4,6 +4,7 @@ import (
 	"html/template"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -72,29 +73,81 @@ func (me *webApp) getGoals() (goals []goalHeader) {
 	return
 }
 
-func (me *webApp) getGoalPage(writer http.ResponseWriter, request *http.Request) {
-	var goalId = request.URL.Query().Get("id")
-	var filePath = me.dataDirectory + "/" + goalId + ".json"
-	if _, err := os.Stat(filePath); os.IsNotExist(err) {
-		writer.WriteHeader(http.StatusNotFound)
-		var pageText = me.getLayoutPage(Page{
-			Title:   "Goal not found",
-			Content: template.HTML("Goal not found"),
-		})
-		writer.Header().Add(contentType, contentTypeTextHtml)
-		writer.Write([]byte(pageText))
+func (me *webApp) getGoalHeader(goalId string) *goalHeader {
+	var file = me.dataDirectory + "/" + goalId
+	var fileStat, fileError = os.Stat(file)
+	if fileError == nil && fileStat.IsDir() {
+		var filePath = me.dataDirectory + "/" + fileStat.Name() + "/_header.json"
+		return readJsonFile(filePath, new(goalHeader))
+	} else {
+		return nil
 	}
-	var theGoal = readJsonFile(filePath, new(goalInfo))
+}
+
+func (me *webApp) getGoalNotFoundPage(responseWriter http.ResponseWriter, request *http.Request) {
+	responseWriter.WriteHeader(http.StatusNotFound)
+	var pageText = me.getLayoutPage(Page{
+		Title:   "Goal not found",
+		Content: template.HTML("Goal not found"),
+	})
+	responseWriter.Header().Add(contentType, contentTypeTextHtml)
+	responseWriter.Write([]byte(pageText))
+}
+
+func (me *webApp) getGoalPage(responseWriter http.ResponseWriter, request *http.Request) {
+	var goalId = request.URL.Query().Get("id")
+	var offsetText = request.URL.Query().Get("offset")
+	var offset = 0
+	if len(offsetText) > 0 {
+		var offsetError error
+		offset, offsetError = strconv.Atoi(offsetText)
+		if offsetError != nil {
+			responseWriter.WriteHeader(http.StatusBadRequest)
+			responseWriter.Header().Add(contentType, contentTypeText)
+			responseWriter.Write([]byte("Offset must be a number"))
+		}
+	}
+	var limit = 10
+
+	var goalHeader = me.getGoalHeader(goalId)
+	if goalHeader == nil {
+		me.getGoalNotFoundPage(responseWriter, request)
+		return
+	}
+
+	var goalDirectory = me.dataDirectory + "/" + goalId
+	var goalDirectoryInfo, goalDirectoryError = os.Stat(goalDirectory)
+	if os.IsNotExist(goalDirectoryError) || !goalDirectoryInfo.IsDir() {
+		me.getGoalNotFoundPage(responseWriter, request)
+		return
+	}
+
+	var goalFiles, goalFilesError = os.ReadDir(goalDirectory)
+	sortFilesByName(goalFiles)
+	AssertError(goalFilesError)
+	var goalFileCount = 0
+	var posts []smartPost
+	for goalFileIndex, goalFile := range goalFiles {
+		if !goalFile.IsDir() {
+			goalFileCount++
+			if offset <= goalFileIndex && goalFileIndex < offset+limit {
+				var goalFile = goalDirectory + "/" + goalFile.Name()
+				var post = readJsonFile(goalFile, new(smartPost))
+				posts = append(posts, *post)
+			}
+		}
+	}
+
 	var textBuilder = new(strings.Builder)
-	var pageData = goalPageData{Goal: theGoal}
+	var pageData = goalPageData{Posts: posts}
 	pageData.BaseUrl = me.path
 	pageData.prepare()
 	AssertError(me.goalTemplate.Execute(textBuilder, pageData))
 	var pageText = me.getLayoutPage(Page{
-		Title:   theGoal.Title,
+		Title:   goalHeader.Title,
 		Content: template.HTML(textBuilder.String()),
 	})
-	writer.WriteHeader(http.StatusOK)
-	writer.Header().Add(contentType, contentTypeTextHtml)
-	writer.Write([]byte(pageText))
+	responseWriter.WriteHeader(http.StatusOK)
+	responseWriter.Header().Add(contentType, contentTypeTextHtml)
+	responseWriter.Write([]byte(pageText))
 }

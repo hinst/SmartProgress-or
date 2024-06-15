@@ -9,14 +9,14 @@ type indexPageData struct {
 
 type goalPageData struct {
 	Page
-	Goal *goalInfo
+	Posts []smartPost
 }
 
 func (me *goalPageData) prepare() {
-	for iPost := range me.Goal.Posts {
-		me.Goal.Posts[iPost].Content = template.HTML(me.Goal.Posts[iPost].Msg)
-		for iComment := range me.Goal.Posts[iPost].Comments {
-			me.Goal.Posts[iPost].Comments[iComment].Content = template.HTML(me.Goal.Posts[iPost].Comments[iComment].Msg)
+	for iPost := range me.Posts {
+		me.Posts[iPost].Content = template.HTML(me.Posts[iPost].Msg)
+		for iComment := range me.Posts[iPost].Comments {
+			me.Posts[iPost].Comments[iComment].Content = template.HTML(me.Posts[iPost].Comments[iComment].Msg)
 		}
 	}
 }

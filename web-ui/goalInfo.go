@@ -13,12 +13,6 @@ type goalHeader struct {
 	Author    string    `json:"author"`
 }
 
-type goalInfo struct {
-	Id    string      `json:"id"`
-	Title string      `json:"title"`
-	Posts []smartPost `json:"posts"`
-}
-
 type smartPost struct {
 	Id       string         `json:"id"`
 	Msg      string         `json:"msg"`

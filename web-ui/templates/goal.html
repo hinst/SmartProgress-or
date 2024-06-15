@@ -1,22 +1,22 @@
-{{range $goal := .Goal.Posts}}
+{{range $post := .Posts}}
     <div class="w3-dark-grey" style="padding-left: 10px">
-        {{$goal.Date}}
+        {{$post.Date}}
         <div class="w3-black" style="display: inline-block; padding-left: 4px; padding-right: 4px">
-            {{$goal.Type}}
+            {{$post.Type}}
         </div>
-        {{$goal.Username}}
+        {{$post.Username}}
     </div>
     <div class="w3-panel w3-leftbar w3-border-dark-grey" style="margin-top: 0">
-        {{$goal.Content}}
-        {{if ne (len $goal.Images) 0}}
-            {{range $image := $goal.Images}}
+        {{$post.Content}}
+        {{if ne (len $post.Images) 0}}
+            {{range $image := $post.Images}}
                 <img src="{{$image.DataUrl}}" height="150" class="w3-margin-right">
             {{end}}
         {{end}}
         <div class="w3-margin-top"></div>
-        {{if ne (len $goal.Comments) 0}}
-            <div class="w3-dark-grey" style="padding-left: 10px">Comments: {{len $goal.Comments}}</div>
-            {{range $comment := $goal.Comments}}
+        {{if ne (len $post.Comments) 0}}
+            <div class="w3-dark-grey" style="padding-left: 10px">Comments: {{len $post.Comments}}</div>
+            {{range $comment := $post.Comments}}
                 <div class="w3-margin-top">
                     <b>{{$comment.User.Username}}:</b>
                 </div>
