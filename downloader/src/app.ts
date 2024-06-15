@@ -4,7 +4,7 @@ import { getDataUrlFromBlob, requireString } from './string';
 import * as Smart from './smartProgress';
 import { smartProgressHost, smartProgressUrl, Comment } from './smartProgress';
 import fs from 'fs';
-import { GoalHeader, GoalInfo } from './goalInfo';
+import { GoalHeader } from './goalInfo';
 
 const REGEXP_GOAL_TITLE = /<title>(.*?)<\/title>/g;
 
@@ -23,8 +23,8 @@ class App {
     }
 
     async run() {
-        var goalIds = this.config.goalId.split(',');
-        for (let goalId of goalIds) {
+        const goalIds = this.config.goalId.split(',');
+        for (const goalId of goalIds) {
             try {
                 await this.readGoal(goalId);
             } catch (e) {
@@ -68,7 +68,7 @@ class App {
     }
 
     private async readGoalTitle(goalId: string) {
-        let url = smartProgressUrl + '/goal/' + encodeURIComponent(goalId);
+        const url = smartProgressUrl + '/goal/' + encodeURIComponent(goalId);
         const response = await fetch(url);
         if (!response.ok) {
             const text = await response.text();
@@ -104,7 +104,7 @@ class App {
     }
 
     async readComments(postId: string): Promise<GetCommentsResponse> {
-        let url = smartProgressUrl + '/blog/getComments?post_id=' + postId;
+        const url = smartProgressUrl + '/blog/getComments?post_id=' + postId;
         const response = await fetch(url, {
             headers: {
                 Accept: 'application/json',
@@ -120,7 +120,7 @@ class App {
 
     async readImages(post: Smart.Post) {
         for (const image of post.images) {
-            let url = smartProgressUrl + image.url;
+            const url = smartProgressUrl + image.url;
             const response = await fetch(url, {
                 headers: {
                     Host: smartProgressHost
