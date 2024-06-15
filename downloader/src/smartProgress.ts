@@ -10,6 +10,7 @@ export interface Post {
     type: string;
     id: string;
     msg: string;
+    /** Example: 2023-04-28 09:12:21 */
     date: string;
     comments: Comment[];
     images: {
