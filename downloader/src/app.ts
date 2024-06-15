@@ -18,7 +18,7 @@ class App {
     constructor(private config: Config) {
     }
 
-    private get dataDir(): string {
+    private get dataDirectory(): string {
         return 'data';
     }
 
@@ -34,7 +34,7 @@ class App {
     }
 
     private async readGoal(goalId: string) {
-        fs.mkdirSync(this.dataDir, { recursive: true });
+        fs.mkdirSync(this.dataDirectory, { recursive: true });
         const goalTitle = await this.readGoalTitle(goalId);
         let goalAuthor = '';
         const postCount = await this.processGoalPosts(goalId, (post: Smart.Post) => {
@@ -54,16 +54,16 @@ class App {
     }
 
     private saveGoalHeader(header: GoalHeader) {
-        const goalDir = this.dataDir + '/' + header.id;
-        fs.mkdirSync(goalDir, { recursive: true });
-        fs.writeFileSync(goalDir + '/_header.json', JSON.stringify(header, null, '\t'));
+        const goalDirectory = this.dataDirectory + '/' + header.id;
+        fs.mkdirSync(goalDirectory, { recursive: true });
+        fs.writeFileSync(goalDirectory + '/_header.json', JSON.stringify(header, null, '\t'));
     }
 
     private savePost(goalId: string, post: Smart.Post) {
-        const goalDir = this.dataDir + '/' + goalId;
-        fs.mkdirSync(goalDir, { recursive: true });
+        const goalDirectory = this.dataDirectory + '/' + goalId;
+        fs.mkdirSync(goalDirectory, { recursive: true });
         const fileFriendlyDate = post.date.replaceAll(' ', '_').replaceAll(':', '-');
-        const postFile = goalDir + '/' + fileFriendlyDate + '.json';
+        const postFile = goalDirectory + '/' + fileFriendlyDate + '.json';
         fs.writeFileSync(postFile, JSON.stringify(post, null, '\t'));
     }
 
