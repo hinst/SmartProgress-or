@@ -13,6 +13,12 @@
 	}
 	encode zstd gzip
 	reverse_proxy /smartProgress-or* web-ui.smart-progress-or.svc.cluster.local:8080
+	handle /configKeeper* {
+		basicauth {
+			import configKeeperPassword.txt
+		}
+		reverse_proxy /configKeeper* config-keeper.config-keeper.svc.cluster.local:3000
+	}
 	file_server
 	log
 }
