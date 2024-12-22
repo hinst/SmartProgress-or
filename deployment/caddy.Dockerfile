@@ -1,4 +1,4 @@
-FROM --platform=linux/aarch64 caddy:builder-alpine AS builder
+FROM --platform=linux/aarch64 caddy:builder AS builder
 RUN xcaddy build --with github.com/mholt/caddy-ratelimit
 
 FROM --platform=linux/aarch64 caddy:latest
