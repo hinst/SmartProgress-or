@@ -28,7 +28,8 @@ spec:
           name: web-router-favicon
       containers:
       - name: caddy
-        image: hinst/orange-caddy
+        image: hinst/orange-caddy:latest
+        imagePullPolicy: Always
         ports:
         - containerPort: 80
         volumeMounts:
