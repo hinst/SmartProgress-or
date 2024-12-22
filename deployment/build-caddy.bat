@@ -1,1 +1,1 @@
-docker build -t hinst/orange-caddy -f caddy.Dockerfile . && docker push hinst/orange-caddy
+docker build --platform=linux/arm64 -t hinst/orange-caddy -f caddy.Dockerfile . && docker push hinst/orange-caddy
