@@ -6,7 +6,7 @@ releases:
 - name: dashboard-account
   chart: dashboard-account
   namespace: default
-  installed: true
+  installed: false
 
 - name: smart-progress-or-downloader
   chart: smart-progress-or-downloader
