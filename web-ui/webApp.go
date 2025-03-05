@@ -4,6 +4,7 @@ import (
 	"html/template"
 	"net/http"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
 )
@@ -13,17 +14,19 @@ type webApp struct {
 	dataDirectory      string
 	templatesDirectory string
 
-	indexTemplate    *template.Template
-	layoutTemplate   *template.Template
-	notFoundTemplate *template.Template
-	goalTemplate     *template.Template
-	headerFileName   string
+	indexTemplate       *template.Template
+	layoutTemplate      *template.Template
+	notFoundTemplate    *template.Template
+	goalTemplate        *template.Template
+	headerFileName      string
+	goalIdStringMatcher *regexp.Regexp
 }
 
 func (me *webApp) Start() {
 	me.loadTemplates()
 	me.registerFunctions()
 	me.headerFileName = "_header.json"
+	me.goalIdStringMatcher = regexp.MustCompile(`^\d+$`)
 }
 
 func (me *webApp) loadTemplates() {
@@ -115,6 +118,10 @@ func (me *webApp) readOffset(responseWriter http.ResponseWriter, request *http.R
 
 func (me *webApp) getGoalPage(responseWriter http.ResponseWriter, request *http.Request) {
 	var goalId = request.URL.Query().Get("id")
+	if !me.checkValidGoalIdString(goalId) {
+		me.getGoalNotFoundPage(responseWriter, request)
+		return
+	}
 	var offset, offsetError = me.readOffset(responseWriter, request)
 	if offsetError != nil {
 		return
@@ -160,4 +167,8 @@ func (me *webApp) getGoalPage(responseWriter http.ResponseWriter, request *http.
 	responseWriter.WriteHeader(http.StatusOK)
 	responseWriter.Header().Add(contentType, contentTypeTextHtml)
 	responseWriter.Write([]byte(pageText))
+}
+
+func (me *webApp) checkValidGoalIdString(goalId string) bool {
+	return me.goalIdStringMatcher.MatchString(goalId)
 }
