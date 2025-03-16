@@ -1,9 +1,0 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: web-router-config
-data:
-  Caddyfile: |-
-{{ .Files.Get "Caddyfile" | indent 4 }}
-  configKeeperPassword.txt: |-
-{{ .Files.Get "configKeeperPassword.txt" | indent 4 }}

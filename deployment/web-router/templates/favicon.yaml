@@ -1,7 +1,0 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: web-router-favicon
-binaryData:
-  favicon.ico: |-
-{{ .Files.Get "favicon.ico" | b64enc | indent 4 }}
