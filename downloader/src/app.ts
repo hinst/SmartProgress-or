@@ -68,19 +68,25 @@ class App {
     }
 
     private savePost(goalId: string, post: Smart.Post) {
-        const insertPost = this.db.prepare(
-            'INSERT INTO goalPosts (goalId, dateTime, htmlText) VALUES (?, ?, ?)' +
-            ' ON CONFLICT(goalId, dateTime) DO UPDATE SET htmlText = excluded.htmlText'
-        );
+        const goalIdInt = parseInt(goalId);
+        if (isNaN(goalIdInt))
+            throw new Error('Cannot parse integer from goalId' + goalId);
         const dateEpoch = DateTime.fromSQL(post.date).toUTC().toSeconds();
-        insertPost.run(parseInt(goalId), dateEpoch, post.msg);
-        return;
 
-        const goalDirectory = this.dataDirectory + '/' + goalId;
-        fs.mkdirSync(goalDirectory, { recursive: true });
-        const fileFriendlyDate = post.date.replaceAll(' ', '_').replaceAll(':', '-');
-        const postFile = goalDirectory + '/' + fileFriendlyDate + '.json';
-        fs.writeFileSync(postFile, JSON.stringify(post, null, '\t'));
+        const insertPost = this.db.prepare(
+            'INSERT INTO goalPosts (goalId, dateTime, type, htmlText) VALUES (?, ?, ?, ?)' +
+            ' ON CONFLICT(goalId, dateTime) DO UPDATE SET type = excluded.type, htmlText = excluded.htmlText'
+        );
+        insertPost.run(goalIdInt, dateEpoch, post.type, post.msg);
+
+        if (post.images?.length)
+            for (const image of post.images) {
+                const insertImage = this.db.prepare(
+                    'INSERT INTO goalPostImages (goalId, parentDateTime, contentType, file) VALUES (?, ?, ?, ?)' +
+                    ' ON CONFLICT(goalId, parentDateTime, contentType, file) DO NOTHING'
+                );
+                insertImage.run(goalIdInt, dateEpoch, image.contentType, image.data);
+            }
     }
 
     private async readGoalTitle(goalId: string) {
@@ -143,9 +149,9 @@ class App {
                     Host: smartProgressHost
                 }
             });
+            image.contentType = response.headers.get('Content-Type') || '';
             const blob = await response.blob();
-            const contentType = response.headers.get('Content-Type') || '';
-            image.dataUrl = await getDataUrlFromBlob(blob, contentType);
+            image.data = await blob.bytes();
         }
     }
 

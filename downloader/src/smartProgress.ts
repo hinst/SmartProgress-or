@@ -16,6 +16,8 @@ export interface Post {
     images: {
         url: string;
         dataUrl: string;
+        data: Uint8Array;
+        contentType: string;
     }[];
     count_comments: string;
     username: string;
