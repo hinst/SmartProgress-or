@@ -29,6 +29,9 @@ export interface User {
 }
 
 export interface Comment {
-    msg: string;
+    /** HTML */ msg: string;
     user: User;
+    /** Integer */ user_id: string;
+    /** Name */ username: string;
+    /** Example: 2023-04-28 09:12:21 */ date: string;
 }

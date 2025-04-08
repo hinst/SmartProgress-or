@@ -79,14 +79,26 @@ class App {
         );
         insertPost.run(goalIdInt, dateEpoch, post.type, post.msg);
 
-        if (post.images?.length)
-            for (const image of post.images) {
-                const insertImage = this.db.prepare(
-                    'INSERT INTO goalPostImages (goalId, parentDateTime, contentType, file) VALUES (?, ?, ?, ?)' +
-                    ' ON CONFLICT(goalId, parentDateTime, contentType, file) DO NOTHING'
-                );
-                insertImage.run(goalIdInt, dateEpoch, image.contentType, image.data);
-            }
+        for (const image of post.images || []) {
+            const insertImage = this.db.prepare(
+                'INSERT INTO goalPostImages (goalId, parentDateTime, contentType, file) VALUES (?, ?, ?, ?)' +
+                ' ON CONFLICT(goalId, parentDateTime, contentType, file) DO NOTHING'
+            );
+            insertImage.run(goalIdInt, dateEpoch, image.contentType, image.data);
+        }
+
+        for (const comment of post.comments || []) {
+            const commentDateEpoch = DateTime.fromSQL(comment.date).toUTC().toSeconds();
+            const userId = parseInt(comment.user_id);
+            if (isNaN(userId))
+                throw new Error('Cannot parse integer from userId' + comment.user_id);
+            const insertComment = this.db.prepare(
+                'INSERT INTO goalPostComments (goalId, parentDateTime, dateTime, username, smartProgressUserId, htmlText)' +
+                ' VALUES (?, ?, ?, ?, ?, ?)' +
+                ' ON CONFLICT(goalId, parentDateTime, dateTime, username, smartProgressUserId, htmlText) DO NOTHING'
+            );
+            insertComment.run(goalIdInt, dateEpoch, commentDateEpoch, comment.username, userId, comment.msg);
+        }
     }
 
     private async readGoalTitle(goalId: string) {
@@ -151,6 +163,7 @@ class App {
             });
             image.contentType = response.headers.get('Content-Type') || '';
             const blob = await response.blob();
+            //@ts-ignore
             image.data = await blob.bytes();
         }
     }
