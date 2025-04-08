@@ -5,6 +5,8 @@ import * as Smart from './smartProgress';
 import { smartProgressHost, smartProgressUrl, Comment } from './smartProgress';
 import fs from 'fs';
 import { GoalHeader } from './goalInfo';
+import { DatabaseSync } from 'node:sqlite';
+import { DateTime } from 'luxon';
 
 const REGEXP_GOAL_TITLE = /<title>(.*?)<\/title>/g;
 
@@ -15,7 +17,14 @@ interface GetCommentsResponse {
 }
 
 class App {
+    private db: DatabaseSync;
+
     constructor(private config: Config) {
+        fs.mkdirSync(this.dataDirectory, { recursive: true });
+        this.db = new DatabaseSync(this.dataDirectory + '/hinst-website.db');
+        this.db.exec('PRAGMA journal_mode=WAL;');
+        this.db.exec(`PRAGMA busy_timeout=${1000 * 60 * 5};`);
+        this.db.exec(fs.readFileSync('schema.sql').toString());
     }
 
     private get dataDirectory(): string {
@@ -34,7 +43,6 @@ class App {
     }
 
     private async readGoal(goalId: string) {
-        fs.mkdirSync(this.dataDirectory, { recursive: true });
         const goalTitle = await this.readGoalTitle(goalId);
         let goalAuthor = '';
         const postCount = await this.processGoalPosts(goalId, (post: Smart.Post) => {
@@ -60,6 +68,14 @@ class App {
     }
 
     private savePost(goalId: string, post: Smart.Post) {
+        const insertPost = this.db.prepare(
+            'INSERT INTO goalPosts (goalId, dateTime, htmlText) VALUES (?, ?, ?)' +
+            ' ON CONFLICT(goalId, dateTime) DO UPDATE SET htmlText = excluded.htmlText'
+        );
+        const dateEpoch = DateTime.fromSQL(post.date).toUTC().toSeconds();
+        insertPost.run(parseInt(goalId), dateEpoch, post.msg);
+        return;
+
         const goalDirectory = this.dataDirectory + '/' + goalId;
         fs.mkdirSync(goalDirectory, { recursive: true });
         const fileFriendlyDate = post.date.replaceAll(' ', '_').replaceAll(':', '-');
@@ -75,8 +91,8 @@ class App {
             throw new Error('Could not load goal title: ' + response.statusText + '\n' + text);
         }
         const html = await response.text();
-        const title = html.matchAll(REGEXP_GOAL_TITLE).next().value[1];
-        return title;
+        const title = html.matchAll(REGEXP_GOAL_TITLE).next().value?.[1];
+        return title || '';
     }
 
     private async processGoalPosts(goalId: string, processPost: (post: Smart.Post) => void) {
@@ -99,6 +115,7 @@ class App {
                 startId = blogPosts.blog[blogPosts.blog.length - 1].id;
             } else
                 break;
+            break; // temporary for testing
         }
         return totalPostCount;
     }

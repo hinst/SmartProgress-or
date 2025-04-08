@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "start": "node --env-file=.env dist/app.js",
-    "start-prod": "node dist/app.js"
+    "start": "node --env-file=.env --experimental-sqlite dist/app.js",
+    "start-prod": "node --experimental-sqlite dist/app.js"
   },
   "keywords": [],
   "author": "",
@@ -12,12 +12,14 @@
   "description": "",
   "devDependencies": {
     "@eslint/js": "^9.5.0",
-    "@types/node": "^20.12.7",
+    "@types/luxon": "^3.6.2",
+    "@types/node": "^22.14.0",
     "eslint": "^9.5.0",
     "globals": "^15.4.0",
     "typescript": "^5.4.5"
   },
   "dependencies": {
+    "luxon": "^3.6.1",
     "source-map-support": "^0.5.21"
   }
 }
