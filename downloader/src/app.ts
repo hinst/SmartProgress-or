@@ -8,6 +8,7 @@ import { GoalHeader } from './goalInfo';
 import { DatabaseSync } from 'node:sqlite';
 import { DateTime } from 'luxon';
 import { JSDOM } from 'jsdom';
+import { GoalRecord } from './goalRecord';
 
 interface GetCommentsResponse {
     /** Should be "success" */
@@ -34,15 +35,17 @@ class App {
         const goalIds = this.config.goalId.split(',');
         for (const goalId of goalIds) {
             try {
-                await this.readGoal(goalId);
+                await this.syncGoal(goalId);
             } catch (e) {
                 console.error('Cannot read goal ' + goalId, e);
             }
         }
     }
 
-    private async readGoal(goalId: string) {
-        const goalTitle = await this.readGoalTitle(goalId);
+    private async syncGoal(goalId: string) {
+        const goalInfo = await this.readGoalInfo(goalId);
+        this.saveGoalInfo(goalInfo);
+        return;
         let goalAuthor = '';
         const postCount = await this.processGoalPosts(goalId, (post: Smart.Post) => {
             if (post.type === 'post')
@@ -100,16 +103,35 @@ class App {
         }
     }
 
-    private async readGoalTitle(goalId: string) {
+    private async readGoalInfo(goalId: string): Promise<GoalRecord> {
         const url = smartProgressUrl + '/goal/' + encodeURIComponent(goalId);
         const response = await fetch(url);
         if (!response.ok) {
             const text = await response.text();
             throw new Error('Could not load goal title: ' + response.statusText + '\n' + text);
         }
-        const html = await response.text();
-        const parsedHtml = new JSDOM(html);
-        return parsedHtml.window.document.title;
+        const text = await response.text();
+        const document = new JSDOM(text).window.document;
+        const title = document.title;
+        const descriptionHtml = document.querySelector('#goal_descr div')?.innerHTML.trim();
+        const authorName = document.querySelector('.user-widget__name a')?.textContent?.trim();
+        const goalIdNumber = parseInt(goalId);
+        if (isNaN(goalIdNumber))
+            throw new Error('Cannot parse integer from goalId' + goalId);
+        return new GoalRecord(
+            goalIdNumber,
+            title,
+            descriptionHtml || '',
+            authorName || '',
+        );
+    }
+
+    private saveGoalInfo(goalRecord: GoalRecord) {
+        const statement = this.db.prepare(
+            'INSERT INTO goals (id, title, description, authorName) VALUES (?, ?, ?, ?)' +
+            ' ON CONFLICT(id) DO UPDATE SET title = excluded.title, description = excluded.description, authorName = excluded.authorName'
+        );
+        statement.run(goalRecord.id, goalRecord.title, goalRecord.description, goalRecord.authorName);
     }
 
     private async processGoalPosts(goalId: string, processPost: (post: Smart.Post) => void) {

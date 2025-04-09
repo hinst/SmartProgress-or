@@ -1,10 +1,19 @@
+CREATE TABLE IF NOT EXISTS goals (
+	id INTEGER NOT NULL PRIMARY KEY,
+	title TEXT NOT NULL,
+	description TEXT NOT NULL, /* HTML */
+	descriptionEnglish TEXT, /* HTML */
+	descriptionGerman TEXT, /* HTML */
+	authorName TEXT NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS goalPosts (
 	goalId INTEGER NOT NULL,
 	dateTime INTEGER NOT NULL, /* Unix seconds UTC */
 	isPublic INTEGER NOT NULL DEFAULT 0,
-	htmlText TEXT NOT NULL,
-	htmlTextEnglish TEXT,
-	htmlTextGerman TEXT,
+	text TEXT NOT NULL,  /* HTML */
+	textEnglish TEXT,  /* HTML */
+	textGerman TEXT,  /* HTML */
 	type TEXT NOT NULL,
 	PRIMARY KEY (goalId, dateTime)
 );
