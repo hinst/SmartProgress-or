@@ -1,14 +1,13 @@
 import 'source-map-support/register';
 import { Config } from './config';
-import { getDataUrlFromBlob, requireString } from './string';
+import { requireString } from './string';
 import * as Smart from './smartProgress';
 import { smartProgressHost, smartProgressUrl, Comment } from './smartProgress';
 import fs from 'fs';
 import { GoalHeader } from './goalInfo';
 import { DatabaseSync } from 'node:sqlite';
 import { DateTime } from 'luxon';
-
-const REGEXP_GOAL_TITLE = /<title>(.*?)<\/title>/g;
+import { JSDOM } from 'jsdom';
 
 interface GetCommentsResponse {
     /** Should be "success" */
@@ -109,8 +108,8 @@ class App {
             throw new Error('Could not load goal title: ' + response.statusText + '\n' + text);
         }
         const html = await response.text();
-        const title = html.matchAll(REGEXP_GOAL_TITLE).next().value?.[1];
-        return title || '';
+        const parsedHtml = new JSDOM(html);
+        return parsedHtml.window.document.title;
     }
 
     private async processGoalPosts(goalId: string, processPost: (post: Smart.Post) => void) {
