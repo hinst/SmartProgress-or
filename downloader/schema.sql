@@ -3,6 +3,8 @@ CREATE TABLE IF NOT EXISTS goalPosts (
 	dateTime INTEGER NOT NULL, /* Unix seconds UTC */
 	isPublic INTEGER NOT NULL DEFAULT 0,
 	htmlText TEXT NOT NULL,
+	htmlTextEnglish TEXT,
+	htmlTextGerman TEXT,
 	type TEXT NOT NULL,
 	PRIMARY KEY (goalId, dateTime)
 );
