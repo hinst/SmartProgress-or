@@ -10,12 +10,6 @@ import { JSDOM } from 'jsdom';
 import { GoalRecord } from './goalRecord';
 import { ImageRecord } from './image';
 
-interface GetCommentsResponse {
-    /** Should be "success" */
-    status: string;
-    comments: Comment[];
-}
-
 class App {
     private db: DatabaseSync;
 
@@ -161,7 +155,7 @@ class App {
             const text = await response.text();
             throw new Error('Cannot read comments: ' + response.statusText + '\n' + text);
         }
-        const responseObject: GetCommentsResponse = await response.json();
+        const responseObject: Smart.GetCommentsResponse = await response.json();
         return responseObject.comments || [];
     }
 

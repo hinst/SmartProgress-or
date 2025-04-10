@@ -34,3 +34,9 @@ export interface Comment {
     /** Name */ username: string;
     /** Example: 2023-04-28 09:12:21 */ date: string;
 }
+
+export interface GetCommentsResponse {
+    /** Should be "success" */
+    status: string;
+    comments: Comment[];
+}
