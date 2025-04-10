@@ -54,6 +54,28 @@ class App {
             this.savePost(goalId, post);
             const images = await this.readImages(post);
             this.saveImages(post, images);
+            const comments = await this.readComments(post.id);
+            this.saveComments(post, comments);
+        }
+    }
+
+    private saveComments(post: Smart.Post, comments: Smart.Comment[]) {
+        const parentDateTime = DateTime.fromSQL(post.date).toUTC().toSeconds();
+        const goalId = parseInt(post.obj_id);
+        if (isNaN(goalId))
+            throw new Error('Cannot parse integer from goalId' + post.obj_id);
+        for (const comment of comments) {
+            const dateTime = DateTime.fromSQL(comment.date).toUTC().toSeconds();
+            const smartProgressUserId = parseInt(comment.user_id);
+            if (isNaN(smartProgressUserId))
+                throw new Error('Cannot parse integer from userId' + comment.user_id);
+            const insertComment = this.db.prepare(
+                'INSERT INTO goalPostComments (goalId, parentDateTime, dateTime, smartProgressUserId, username, text)' +
+                ' VALUES (?, ?, ?, ?, ?, ?)' +
+                ' ON CONFLICT(goalId, parentDateTime, dateTime, smartProgressUserId)' +
+                ' DO UPDATE SET username = excluded.username, text = excluded.text'
+            );
+            insertComment.run(goalId, parentDateTime, dateTime, smartProgressUserId, comment.username, comment.msg);
         }
     }
 
@@ -68,20 +90,6 @@ class App {
             ' ON CONFLICT(goalId, dateTime) DO UPDATE SET type = excluded.type, text = excluded.text'
         );
         insertPost.run(goalIdInt, dateEpoch, post.type, post.msg);
-        return;
-
-        for (const comment of post.comments || []) {
-            const commentDateEpoch = DateTime.fromSQL(comment.date).toUTC().toSeconds();
-            const userId = parseInt(comment.user_id);
-            if (isNaN(userId))
-                throw new Error('Cannot parse integer from userId' + comment.user_id);
-            const insertComment = this.db.prepare(
-                'INSERT INTO goalPostComments (goalId, parentDateTime, dateTime, username, smartProgressUserId, htmlText)' +
-                ' VALUES (?, ?, ?, ?, ?, ?)' +
-                ' ON CONFLICT(goalId, parentDateTime, dateTime, username, smartProgressUserId, htmlText) DO NOTHING'
-            );
-            insertComment.run(goalIdInt, dateEpoch, commentDateEpoch, comment.username, userId, comment.msg);
-        }
     }
 
     private saveImages(post: Smart.Post, imageRecords: ImageRecord[]) {
@@ -141,7 +149,7 @@ class App {
         return allPosts;
     }
 
-    private async readComments(postId: string): Promise<GetCommentsResponse> {
+    private async readComments(postId: string): Promise<Smart.Comment[]> {
         const url = smartProgressUrl + '/blog/getComments?post_id=' + postId;
         const response = await fetch(url, {
             headers: {
@@ -151,9 +159,10 @@ class App {
         });
         if (!response.ok) {
             const text = await response.text();
-            throw new Error('Could not read comments: ' + response.statusText + '\n' + text);
+            throw new Error('Cannot read comments: ' + response.statusText + '\n' + text);
         }
-        return await response.json();
+        const responseObject: GetCommentsResponse = await response.json();
+        return responseObject.comments || [];
     }
 
     private async readImages(post: Smart.Post): Promise<ImageRecord[]> {

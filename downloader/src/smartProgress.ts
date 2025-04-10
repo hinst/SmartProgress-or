@@ -15,7 +15,7 @@ export interface Post {
     /** Example: 2023-04-28 09:12:21 */
     date: string;
     comments: Comment[];
-    images: {
+    images?: {
         url: string;
     }[];
     count_comments: string;

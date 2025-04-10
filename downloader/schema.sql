@@ -31,8 +31,8 @@ CREATE TABLE IF NOT EXISTS goalPostComments (
 	goalId INTEGER NOT NULL,
 	parentDateTime INTEGER NOT NULL, /* Unix seconds UTC */
 	dateTime INTEGER NOT NULL, /* Unix seconds UTC */
-	username TEXT NOT NULL,
 	smartProgressUserId INTEGER,
-	htmlText TEXT NOT NULL,
-	PRIMARY KEY (goalId, parentDateTime, dateTime, username, smartProgressUserId, htmlText)
+	username TEXT NOT NULL,
+	text TEXT NOT NULL,
+	PRIMARY KEY (goalId, parentDateTime, dateTime, smartProgressUserId)
 );
