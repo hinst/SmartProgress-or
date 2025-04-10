@@ -21,9 +21,10 @@ CREATE TABLE IF NOT EXISTS goalPosts (
 CREATE TABLE IF NOT EXISTS goalPostImages (
 	goalId INTEGER NOT NULL,
 	parentDateTime INTEGER NOT NULL, /* Unix seconds UTC */
+	sequenceIndex INTEGER NOT NULL,
 	contentType TEXT NOT NULL,
 	file BLOB NOT NULL,
-	PRIMARY KEY (goalId, parentDateTime, contentType, file)
+	PRIMARY KEY (goalId, parentDateTime, sequenceIndex)
 );
 
 CREATE TABLE IF NOT EXISTS goalPostComments (
