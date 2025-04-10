@@ -6,18 +6,17 @@ export interface Posts {
 }
 
 export interface Post {
+    /** Parent goal id */
+    obj_id: string;
+    id: string;
     /** Can be: 'post' */
     type: string;
-    id: string;
     msg: string;
     /** Example: 2023-04-28 09:12:21 */
     date: string;
     comments: Comment[];
     images: {
         url: string;
-        dataUrl: string;
-        data: Uint8Array;
-        contentType: string;
     }[];
     count_comments: string;
     username: string;

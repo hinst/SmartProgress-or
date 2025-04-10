@@ -4,11 +4,11 @@ import { requireString } from './string';
 import * as Smart from './smartProgress';
 import { smartProgressHost, smartProgressUrl, Comment } from './smartProgress';
 import fs from 'fs';
-import { GoalHeader } from './goalInfo';
 import { DatabaseSync } from 'node:sqlite';
 import { DateTime } from 'luxon';
 import { JSDOM } from 'jsdom';
 import { GoalRecord } from './goalRecord';
+import { ImageRecord } from './image';
 
 interface GetCommentsResponse {
     /** Should be "success" */
@@ -45,28 +45,16 @@ class App {
     private async syncGoal(goalId: string) {
         const goalInfo = await this.readGoalInfo(goalId);
         this.saveGoalInfo(goalInfo);
-        return;
-        let goalAuthor = '';
-        const postCount = await this.processGoalPosts(goalId, (post: Smart.Post) => {
-            if (post.type === 'post')
-                goalAuthor = post.username;
-            this.savePost(goalId, post);
-        });
-        this.saveGoalHeader(
-            new GoalHeader(
-                goalId,
-                goalTitle,
-                postCount,
-                new Date().toISOString(),
-                goalAuthor
-            )
-        );
+        await this.syncPosts(goalId);
     }
 
-    private saveGoalHeader(header: GoalHeader) {
-        const goalDirectory = this.dataDirectory + '/' + header.id;
-        fs.mkdirSync(goalDirectory, { recursive: true });
-        fs.writeFileSync(goalDirectory + '/_header.json', JSON.stringify(header, null, '\t'));
+    private async syncPosts(goalId: string) {
+        const posts = await this.readAllPosts(goalId);
+        for (const post of posts) {
+            this.savePost(goalId, post);
+            const images = await this.readImages(post);
+            this.saveImages(post, images);
+        }
     }
 
     private savePost(goalId: string, post: Smart.Post) {
@@ -76,18 +64,11 @@ class App {
         const dateEpoch = DateTime.fromSQL(post.date).toUTC().toSeconds();
 
         const insertPost = this.db.prepare(
-            'INSERT INTO goalPosts (goalId, dateTime, type, htmlText) VALUES (?, ?, ?, ?)' +
-            ' ON CONFLICT(goalId, dateTime) DO UPDATE SET type = excluded.type, htmlText = excluded.htmlText'
+            'INSERT INTO goalPosts (goalId, dateTime, type, text) VALUES (?, ?, ?, ?)' +
+            ' ON CONFLICT(goalId, dateTime) DO UPDATE SET type = excluded.type, text = excluded.text'
         );
         insertPost.run(goalIdInt, dateEpoch, post.type, post.msg);
-
-        for (const image of post.images || []) {
-            const insertImage = this.db.prepare(
-                'INSERT INTO goalPostImages (goalId, parentDateTime, contentType, file) VALUES (?, ?, ?, ?)' +
-                ' ON CONFLICT(goalId, parentDateTime, contentType, file) DO NOTHING'
-            );
-            insertImage.run(goalIdInt, dateEpoch, image.contentType, image.data);
-        }
+        return;
 
         for (const comment of post.comments || []) {
             const commentDateEpoch = DateTime.fromSQL(comment.date).toUTC().toSeconds();
@@ -101,6 +82,19 @@ class App {
             );
             insertComment.run(goalIdInt, dateEpoch, commentDateEpoch, comment.username, userId, comment.msg);
         }
+    }
+
+    private saveImages(post: Smart.Post, imageRecords: ImageRecord[]) {
+        const dateEpoch = DateTime.fromSQL(post.date).toUTC().toSeconds();
+        imageRecords.forEach((image, index) => {
+            const insertImage = this.db.prepare(
+                'INSERT INTO goalPostImages (goalId, parentDateTime, sequenceIndex, contentType, file)'+
+                ' VALUES (?, ?, ?, ?, ?)' +
+                ' ON CONFLICT(goalId, parentDateTime, sequenceIndex)' +
+                ' DO UPDATE SET contentType = excluded.contentType, file = excluded.file'
+            );
+            insertImage.run(post.obj_id, dateEpoch, index, image.contentType, image.data);
+        });
     }
 
     private async readGoalInfo(goalId: string): Promise<GoalRecord> {
@@ -134,32 +128,20 @@ class App {
         statement.run(goalRecord.id, goalRecord.title, goalRecord.description, goalRecord.authorName);
     }
 
-    private async processGoalPosts(goalId: string, processPost: (post: Smart.Post) => void) {
+    private async readAllPosts(goalId: string): Promise<Smart.Post[]> {
         let startId = '0';
-        let totalPostCount = 0;
+        const allPosts: Smart.Post[] = [];
         while (true) {
-            const blogPosts = await this.readPosts(goalId, startId);
-            if (blogPosts?.blog?.length) {
-                const posts = blogPosts.blog;
-                for (const post of posts) {
-                    if (post.comments && post.comments.length < parseInt(post.count_comments)) {
-                        post.comments = (await this.readComments(post.id)).comments;
-                    }
-                    if (post.images && post.images.length)
-                        await this.readImages(post);
-                }
-                for (const post of posts)
-                    processPost(post);
-                totalPostCount += posts.length;
-                startId = blogPosts.blog[blogPosts.blog.length - 1].id;
-            } else
+            const posts = await this.readPosts(goalId, startId);
+            if (!posts.blog.length)
                 break;
-            break; // temporary for testing
+            allPosts.push(...posts.blog);
+            startId = posts.blog[posts.blog.length - 1].id;
         }
-        return totalPostCount;
+        return allPosts;
     }
 
-    async readComments(postId: string): Promise<GetCommentsResponse> {
+    private async readComments(postId: string): Promise<GetCommentsResponse> {
         const url = smartProgressUrl + '/blog/getComments?post_id=' + postId;
         const response = await fetch(url, {
             headers: {
@@ -174,19 +156,26 @@ class App {
         return await response.json();
     }
 
-    async readImages(post: Smart.Post) {
-        for (const image of post.images) {
+    private async readImages(post: Smart.Post): Promise<ImageRecord[]> {
+        const imageRecords: ImageRecord[] = [];
+        for (const image of post.images || []) {
             const url = smartProgressUrl + image.url;
             const response = await fetch(url, {
                 headers: {
                     Host: smartProgressHost
                 }
             });
-            image.contentType = response.headers.get('Content-Type') || '';
+            if (!response.ok)
+                throw new Error('Cannot read image. Status = ' + response.status + '\n' + await response.text());
+
+            const contentType = response.headers.get('Content-Type') || '';
             const blob = await response.blob();
             //@ts-ignore
-            image.data = await blob.bytes();
+            const data = await blob.bytes();
+            const imageRecord = new ImageRecord(contentType, data);
+            imageRecords.push(imageRecord);
         }
+        return imageRecords;
     }
 
     private async readPosts(goalId: string, startId: string): Promise<Smart.Posts> {
