@@ -66,10 +66,10 @@ class App {
             const insertComment = this.db.prepare(
                 'INSERT INTO goalPostComments (goalId, parentDateTime, dateTime, smartProgressUserId, username, text)' +
                 ' VALUES (?, ?, ?, ?, ?, ?)' +
-                ' ON CONFLICT(goalId, parentDateTime, dateTime, smartProgressUserId)' +
+                ' ON CONFLICT (goalId, parentDateTime, dateTime, smartProgressUserId)' +
                 ' DO UPDATE SET username = excluded.username, text = excluded.text'
             );
-            insertComment.run(goalId, parentDateTime, dateTime, smartProgressUserId, comment.username, comment.msg);
+            insertComment.run(goalId, parentDateTime, dateTime, smartProgressUserId, comment.username || '', comment.msg);
         }
     }
 
