@@ -53,13 +53,22 @@ class App {
         }
     }
 
+    private parseDateTime(text: string): DateTime {
+        const dateTime = DateTime.fromFormat(text, 'yyyy-MM-dd HH:mm:ss',
+            { setZone: true, zone: 'Europe/Moscow' }
+        );
+        if (!dateTime.isValid)
+            throw new Error('Cannot parse date time: "' + text + '"');
+        return dateTime;
+    }
+
     private saveComments(post: Smart.Post, comments: Smart.Comment[]) {
-        const parentDateTime = DateTime.fromSQL(post.date).toUTC().toSeconds();
+        const parentDateTime = this.parseDateTime(post.date).toUTC().toSeconds();
         const goalId = parseInt(post.obj_id);
         if (isNaN(goalId))
             throw new Error('Cannot parse integer from goalId' + post.obj_id);
         for (const comment of comments) {
-            const dateTime = DateTime.fromSQL(comment.date).toUTC().toSeconds();
+            const dateTime = this.parseDateTime(comment.date).toUTC().toSeconds();
             const smartProgressUserId = parseInt(comment.user_id);
             if (isNaN(smartProgressUserId))
                 throw new Error('Cannot parse integer from userId' + comment.user_id);
@@ -77,7 +86,7 @@ class App {
         const goalIdInt = parseInt(goalId);
         if (isNaN(goalIdInt))
             throw new Error('Cannot parse integer from goalId' + goalId);
-        const dateEpoch = DateTime.fromSQL(post.date).toUTC().toSeconds();
+        const dateEpoch = this.parseDateTime(post.date).toUTC().toSeconds();
 
         const insertPost = this.db.prepare(
             'INSERT INTO goalPosts (goalId, dateTime, type, text) VALUES (?, ?, ?, ?)' +
@@ -87,7 +96,7 @@ class App {
     }
 
     private saveImages(post: Smart.Post, imageRecords: ImageRecord[]) {
-        const dateEpoch = DateTime.fromSQL(post.date).toUTC().toSeconds();
+        const dateEpoch = this.parseDateTime(post.date).toUTC().toSeconds();
         imageRecords.forEach((image, index) => {
             const insertImage = this.db.prepare(
                 'INSERT INTO goalPostImages (goalId, parentDateTime, sequenceIndex, contentType, file)'+
