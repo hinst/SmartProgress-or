@@ -44,13 +44,33 @@ class App {
 
     private async syncPosts(goalId: string) {
         const posts = await this.readAllPosts(goalId);
+        let totalCount = 0;
+        let savedCount = 0;
         for (const post of posts) {
+            if (this.checkPostExists(goalId, post))
+                continue;
             this.savePost(goalId, post);
             const images = await this.readImages(post);
             this.saveImages(post, images);
             const comments = await this.readComments(post.id);
             this.saveComments(post, comments);
         }
+        console.log(`Sync complete: goal=${goalId}, posts=${posts.length}, saved=${savedCount}`);
+    }
+
+    private checkPostExists(goalId: string, post: Smart.Post): boolean {
+        const goalIdInt = parseInt(goalId);
+        if (isNaN(goalIdInt))
+            throw new Error('Cannot parse integer from goalId=' + goalId);
+        const dateEpoch = this.parseDateTime(post.date).toUTC().toSeconds();
+        const statement = this.db.prepare(
+            'SELECT COUNT(*) FROM goalPosts WHERE goalId = ? AND dateTime = ?'
+        );
+        const row = statement.get(goalIdInt, dateEpoch);
+        if (!row)
+            return false;
+        const count = row['COUNT(*)'] as number;
+        return typeof count === 'number' && count >= 1;
     }
 
     private parseDateTime(text: string): DateTime {
@@ -64,7 +84,7 @@ class App {
         const parentDateTime = this.parseDateTime(post.date).toUTC().toSeconds();
         const goalId = parseInt(post.obj_id);
         if (isNaN(goalId))
-            throw new Error('Cannot parse integer from goalId' + post.obj_id);
+            throw new Error('Cannot parse integer from goalId=' + post.obj_id);
         for (const comment of comments) {
             const dateTime = this.parseDateTime(comment.date).toUTC().toSeconds();
             const smartProgressUserId = parseInt(comment.user_id);
@@ -83,7 +103,7 @@ class App {
     private savePost(goalId: string, post: Smart.Post) {
         const goalIdInt = parseInt(goalId);
         if (isNaN(goalIdInt))
-            throw new Error('Cannot parse integer from goalId' + goalId);
+            throw new Error('Cannot parse integer from goalId=' + goalId);
         const dateEpoch = this.parseDateTime(post.date).toUTC().toSeconds();
 
         const insertPost = this.db.prepare(
@@ -120,7 +140,7 @@ class App {
         const authorName = document.querySelector('.user-widget__name a')?.textContent?.trim();
         const goalIdNumber = parseInt(goalId);
         if (isNaN(goalIdNumber))
-            throw new Error('Cannot parse integer from goalId' + goalId);
+            throw new Error('Cannot parse integer from goalId=' + goalId);
         return new GoalRecord(
             goalIdNumber,
             title,
