@@ -44,7 +44,6 @@ class App {
 
     private async syncPosts(goalId: string) {
         const posts = await this.readAllPosts(goalId);
-        let totalCount = 0;
         let savedCount = 0;
         for (const post of posts) {
             if (this.checkPostExists(goalId, post))
@@ -54,6 +53,7 @@ class App {
             this.saveImages(post, images);
             const comments = await this.readComments(post.id);
             this.saveComments(post, comments);
+            savedCount++;
         }
         console.log(`Sync complete: goal=${goalId}, posts=${posts.length}, saved=${savedCount}`);
     }
