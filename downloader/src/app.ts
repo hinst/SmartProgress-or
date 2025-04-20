@@ -12,7 +12,7 @@ import { ImageRecord } from './image';
 
 class App {
 	private readonly db: DatabaseSync;
-	private readonly dataDirectory: string = 'data';;
+	private readonly dataDirectory: string = 'data';
 
 	constructor(private config: Config) {
 		fs.mkdirSync(this.dataDirectory, { recursive: true });
@@ -43,8 +43,7 @@ class App {
 		const posts = await this.readAllPosts(goalId);
 		let savedCount = 0;
 		for (const post of posts) {
-			if (this.checkPostExists(goalId, post))
-				continue;
+			if (this.checkPostExists(goalId, post)) continue;
 			this.savePost(goalId, post);
 			const images = await this.readImages(post);
 			this.saveImages(post, images);
@@ -55,33 +54,43 @@ class App {
 		console.log(`Sync complete: goal=${goalId}, posts=${posts.length}, saved=${savedCount}`);
 	}
 
+	private migratePost(goalId: string, post: Smart.Post) {
+		const oldDateTime = DateTime.fromFormat(post.date, 'yyyy-MM-dd HH:mm:ss', {
+			zone: 'Europe/Moscow'
+		});
+		if (!oldDateTime.isValid) throw new Error('Cannot parse date time: "' + post.date + '"');
+		const oldUnixSeconds = oldDateTime.toUTC().toSeconds();
+		const newDateTime = this.parseDateTime(post.date).toUTC();
+		const newUnixSeconds = newDateTime.toUTC().toSeconds();
+		const statement = this.db.prepare(
+			'UPDATE goalPosts SET dateTime = ? WHERE goalId = ? AND dateTime = ?'
+		);
+		const result = statement.run(newUnixSeconds, goalId, oldUnixSeconds);
+	}
+
 	private checkPostExists(goalId: string, post: Smart.Post): boolean {
 		const goalIdInt = parseInt(goalId);
-		if (isNaN(goalIdInt))
-			throw new Error('Cannot parse integer from goalId=' + goalId);
+		if (isNaN(goalIdInt)) throw new Error('Cannot parse integer from goalId=' + goalId);
 		const dateEpoch = this.parseDateTime(post.date).toUTC().toSeconds();
 		const statement = this.db.prepare(
 			'SELECT COUNT(*) FROM goalPosts WHERE goalId = ? AND dateTime = ?'
 		);
 		const row = statement.get(goalIdInt, dateEpoch);
-		if (!row)
-			return false;
+		if (!row) return false;
 		const count = row['COUNT(*)'] as number;
 		return typeof count === 'number' && count >= 1;
 	}
 
 	private parseDateTime(text: string): DateTime {
 		const dateTime = DateTime.fromFormat(text, 'yyyy-MM-dd HH:mm:ss', { zone: 'UTC' });
-		if (!dateTime.isValid)
-			throw new Error('Cannot parse date time: "' + text + '"');
+		if (!dateTime.isValid) throw new Error('Cannot parse date time: "' + text + '"');
 		return dateTime;
 	}
 
 	private saveComments(post: Smart.Post, comments: Smart.Comment[]) {
 		const parentDateTime = this.parseDateTime(post.date).toUTC().toSeconds();
 		const goalId = parseInt(post.obj_id);
-		if (isNaN(goalId))
-			throw new Error('Cannot parse integer from goalId=' + post.obj_id);
+		if (isNaN(goalId)) throw new Error('Cannot parse integer from goalId=' + post.obj_id);
 		for (const comment of comments) {
 			const dateTime = this.parseDateTime(comment.date).toUTC().toSeconds();
 			const smartProgressUserId = parseInt(comment.user_id);
@@ -89,23 +98,29 @@ class App {
 				throw new Error('Cannot parse integer from userId' + comment.user_id);
 			const insertComment = this.db.prepare(
 				'INSERT INTO goalPostComments (goalId, parentDateTime, dateTime, smartProgressUserId, username, text)' +
-				' VALUES (?, ?, ?, ?, ?, ?)' +
-				' ON CONFLICT (goalId, parentDateTime, dateTime, smartProgressUserId)' +
-				' DO UPDATE SET username = excluded.username, text = excluded.text'
+					' VALUES (?, ?, ?, ?, ?, ?)' +
+					' ON CONFLICT (goalId, parentDateTime, dateTime, smartProgressUserId)' +
+					' DO UPDATE SET username = excluded.username, text = excluded.text'
 			);
-			insertComment.run(goalId, parentDateTime, dateTime, smartProgressUserId, comment.username || '', comment.msg);
+			insertComment.run(
+				goalId,
+				parentDateTime,
+				dateTime,
+				smartProgressUserId,
+				comment.username || '',
+				comment.msg
+			);
 		}
 	}
 
 	private savePost(goalId: string, post: Smart.Post) {
 		const goalIdInt = parseInt(goalId);
-		if (isNaN(goalIdInt))
-			throw new Error('Cannot parse integer from goalId=' + goalId);
+		if (isNaN(goalIdInt)) throw new Error('Cannot parse integer from goalId=' + goalId);
 		const dateEpoch = this.parseDateTime(post.date).toUTC().toSeconds();
 
 		const insertPost = this.db.prepare(
 			'INSERT INTO goalPosts (goalId, dateTime, type, text) VALUES (?, ?, ?, ?)' +
-			' ON CONFLICT(goalId, dateTime) DO UPDATE SET type = excluded.type, text = excluded.text'
+				' ON CONFLICT(goalId, dateTime) DO UPDATE SET type = excluded.type, text = excluded.text'
 		);
 		insertPost.run(goalIdInt, dateEpoch, post.type, post.msg);
 	}
@@ -114,10 +129,10 @@ class App {
 		const dateEpoch = this.parseDateTime(post.date).toUTC().toSeconds();
 		imageRecords.forEach((image, index) => {
 			const insertImage = this.db.prepare(
-				'INSERT INTO goalPostImages (goalId, parentDateTime, sequenceIndex, contentType, file)'+
-				' VALUES (?, ?, ?, ?, ?)' +
-				' ON CONFLICT(goalId, parentDateTime, sequenceIndex)' +
-				' DO UPDATE SET contentType = excluded.contentType, file = excluded.file'
+				'INSERT INTO goalPostImages (goalId, parentDateTime, sequenceIndex, contentType, file)' +
+					' VALUES (?, ?, ?, ?, ?)' +
+					' ON CONFLICT(goalId, parentDateTime, sequenceIndex)' +
+					' DO UPDATE SET contentType = excluded.contentType, file = excluded.file'
 			);
 			insertImage.run(post.obj_id, dateEpoch, index, image.contentType, image.data);
 		});
@@ -136,22 +151,21 @@ class App {
 		const descriptionHtml = document.querySelector('#goal_descr div')?.innerHTML.trim();
 		const authorName = document.querySelector('.user-widget__name a')?.textContent?.trim();
 		const goalIdNumber = parseInt(goalId);
-		if (isNaN(goalIdNumber))
-			throw new Error('Cannot parse integer from goalId=' + goalId);
-		return new GoalRecord(
-			goalIdNumber,
-			title,
-			descriptionHtml || '',
-			authorName || '',
-		);
+		if (isNaN(goalIdNumber)) throw new Error('Cannot parse integer from goalId=' + goalId);
+		return new GoalRecord(goalIdNumber, title, descriptionHtml || '', authorName || '');
 	}
 
 	private saveGoalInfo(goalRecord: GoalRecord) {
 		const statement = this.db.prepare(
 			'INSERT INTO goals (id, title, description, authorName) VALUES (?, ?, ?, ?)' +
-			' ON CONFLICT(id) DO UPDATE SET title = excluded.title, description = excluded.description, authorName = excluded.authorName'
+				' ON CONFLICT(id) DO UPDATE SET title = excluded.title, description = excluded.description, authorName = excluded.authorName'
 		);
-		statement.run(goalRecord.id, goalRecord.title, goalRecord.description, goalRecord.authorName);
+		statement.run(
+			goalRecord.id,
+			goalRecord.title,
+			goalRecord.description,
+			goalRecord.authorName
+		);
 	}
 
 	private async readAllPosts(goalId: string): Promise<Smart.Post[]> {
@@ -159,8 +173,7 @@ class App {
 		const allPosts: Smart.Post[] = [];
 		while (true) {
 			const posts = await this.readPosts(goalId, startId);
-			if (!posts.blog.length)
-				break;
+			if (!posts.blog.length) break;
 			allPosts.push(...posts.blog);
 			startId = posts.blog[posts.blog.length - 1].id;
 		}
@@ -193,7 +206,12 @@ class App {
 				}
 			});
 			if (!response.ok)
-				throw new Error('Cannot read image. Status = ' + response.status + '\n' + await response.text());
+				throw new Error(
+					'Cannot read image. Status = ' +
+						response.status +
+						'\n' +
+						(await response.text())
+				);
 
 			const contentType = response.headers.get('Content-Type') || '';
 			const blob = await response.blob();
@@ -211,7 +229,7 @@ class App {
 		url += '&sorting=old_top';
 		url += '&start_id=' + startId;
 		url += '&end_id=0';
-		url += '&step_id=0'
+		url += '&step_id=0';
 		url += '&only_author=0';
 		url += '&change_sorting=0';
 		url += '&obj_type=0';
@@ -230,6 +248,4 @@ class App {
 	}
 }
 
-new App(new Config(
-	requireString(process.env.goalId),
-)).run();
+new App(new Config(requireString(process.env.goalId))).run();
