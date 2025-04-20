@@ -71,7 +71,7 @@ class App {
 	}
 
 	private parseDateTime(text: string): DateTime {
-		const dateTime = DateTime.fromFormat(text, 'yyyy-MM-dd HH:mm:ss', { zone: 'Europe/Moscow' });
+		const dateTime = DateTime.fromFormat(text, 'yyyy-MM-dd HH:mm:ss', { zone: 'UTC' });
 		if (!dateTime.isValid)
 			throw new Error('Cannot parse date time: "' + text + '"');
 		return dateTime;
