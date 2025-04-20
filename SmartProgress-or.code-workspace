@@ -1,10 +1,6 @@
 {
 	"folders": [
 		{
-			"name": "deployment",
-			"path": "deployment"
-		},
-		{
 			"name": "downloader",
 			"path": "downloader"
 		},
