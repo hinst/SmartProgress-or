@@ -1,4 +1,6 @@
 export class Config {
-    constructor(public readonly goalId: string) {
-    }
+	constructor(
+		public readonly goalId: string
+	) {
+	}
 }
