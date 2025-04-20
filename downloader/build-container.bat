@@ -1,1 +1,1 @@
-docker build -t hinst/smart-progress-do-downloader .
+docker build -t hinst/smart-progress-do-downloader --progress=plain .
