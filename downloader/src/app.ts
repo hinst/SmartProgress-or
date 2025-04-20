@@ -2,7 +2,7 @@ import 'source-map-support/register';
 import { Config } from './config';
 import { requireString } from './string';
 import * as Smart from './smartProgress';
-import { smartProgressHost, smartProgressUrl, Comment } from './smartProgress';
+import { smartProgressHost, smartProgressUrl } from './smartProgress';
 import fs from 'fs';
 import { DatabaseSync } from 'node:sqlite';
 import { DateTime } from 'luxon';
@@ -11,7 +11,8 @@ import { GoalRecord } from './goalRecord';
 import { ImageRecord } from './image';
 
 class App {
-    private db: DatabaseSync;
+    private readonly db: DatabaseSync;
+    private readonly dataDirectory: string = 'data';;
 
     constructor(private config: Config) {
         fs.mkdirSync(this.dataDirectory, { recursive: true });
@@ -19,10 +20,6 @@ class App {
         this.db.exec('PRAGMA journal_mode=WAL;');
         this.db.exec(`PRAGMA busy_timeout=${1000 * 60 * 5};`);
         this.db.exec(fs.readFileSync('schema.sql').toString());
-    }
-
-    private get dataDirectory(): string {
-        return 'data';
     }
 
     async run() {
