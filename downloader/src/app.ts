@@ -1,6 +1,6 @@
 import 'source-map-support/register';
 import { Config } from './config';
-import { requireString } from './string';
+import { readBoolean, requireString } from './string';
 import * as Smart from './smartProgress';
 import { smartProgressHost, smartProgressUrl } from './smartProgress';
 import fs from 'fs';
@@ -23,6 +23,7 @@ class App {
 	}
 
 	async run() {
+		console.log(this.config);
 		const goalIds = this.config.goalId.split(',');
 		for (const goalId of goalIds) {
 			try {
@@ -43,6 +44,7 @@ class App {
 		const posts = await this.readAllPosts(goalId);
 		let savedCount = 0;
 		for (const post of posts) {
+			if (this.config.migrationEnabled) this.migratePost(goalId, post);
 			if (this.checkPostExists(goalId, post)) continue;
 			this.savePost(goalId, post);
 			const images = await this.readImages(post);
@@ -66,6 +68,7 @@ class App {
 			'UPDATE goalPosts SET dateTime = ? WHERE goalId = ? AND dateTime = ?'
 		);
 		const result = statement.run(newUnixSeconds, goalId, oldUnixSeconds);
+		console.log(result);
 	}
 
 	private checkPostExists(goalId: string, post: Smart.Post): boolean {
@@ -248,4 +251,6 @@ class App {
 	}
 }
 
-new App(new Config(requireString(process.env.goalId))).run();
+new App(
+	new Config(requireString(process.env.goalId), readBoolean(process.env.migrationEnabled))
+).run();
