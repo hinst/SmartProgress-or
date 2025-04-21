@@ -44,6 +44,7 @@ class App {
 		const posts = await this.readAllPosts(goalId);
 		let savedCount = 0;
 		for (const post of posts) {
+			if (this.config.migrationEnabled) this.migratePost(goalId, post);
 			if (this.checkPostExists(goalId, post)) continue;
 			this.savePost(goalId, post);
 			const images = await this.readImages(post);
@@ -53,6 +54,21 @@ class App {
 			savedCount++;
 		}
 		console.log(`Sync complete: goal=${goalId}, posts=${posts.length}, saved=${savedCount}`);
+	}
+
+	private migratePost(goalId: string, post: Smart.Post) {
+		const oldDateTime = DateTime.fromFormat(post.date, 'yyyy-MM-dd HH:mm:ss', {
+			zone: 'Europe/Moscow'
+		});
+		if (!oldDateTime.isValid) throw new Error('Cannot parse date time: "' + post.date + '"');
+		const oldUnixSeconds = oldDateTime.toUTC().toSeconds();
+		const newDateTime = this.parseDateTime(post.date).toUTC();
+		const newUnixSeconds = newDateTime.toUTC().toSeconds();
+		const statement = this.db.prepare(
+			'UPDATE goalPostImages SET parentDateTime = ? WHERE goalId = ? AND parentDateTime = ?'
+		);
+		const result = statement.run(newUnixSeconds, goalId, oldUnixSeconds);
+		console.log(result);
 	}
 
 	private checkPostExists(goalId: string, post: Smart.Post): boolean {
