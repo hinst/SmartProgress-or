@@ -42,17 +42,22 @@ class App {
 
 	private async syncPosts(goalId: string) {
 		const posts = await this.readAllPosts(goalId);
-		let savedCount = 0;
+		let newCount = 0;
 		for (const post of posts) {
-			if (this.checkPostExists(goalId, post)) continue;
+			const isNew = !this.checkPostExists(goalId, post);
 			this.savePost(goalId, post);
-			const images = await this.readImages(post);
-			this.saveImages(post, images);
-			const comments = await this.readComments(post.id);
-			this.saveComments(post, comments);
-			savedCount++;
+			const age = -this.parseDateTime(post.date).diffNow().as('days');
+			if (isNew || age < 100) {
+				const comments = await this.readComments(post.id);
+				this.saveComments(post, comments);
+			}
+			if (isNew) {
+				const images = await this.readImages(post);
+				this.saveImages(post, images);
+				++newCount;
+			}
 		}
-		console.log(`Sync complete: goal=${goalId}, posts=${posts.length}, saved=${savedCount}`);
+		console.log(`Sync complete: goal=${goalId} posts=${posts.length} new=${newCount}`);
 	}
 
 	private checkPostExists(goalId: string, post: Smart.Post): boolean {
@@ -104,7 +109,6 @@ class App {
 		const goalIdInt = parseInt(goalId);
 		if (isNaN(goalIdInt)) throw new Error('Cannot parse integer from goalId=' + goalId);
 		const dateEpoch = this.parseDateTime(post.date).toUTC().toSeconds();
-
 		const insertPost = this.db.prepare(
 			'INSERT INTO goalPosts (goalId, dateTime, type, text) VALUES (?, ?, ?, ?)' +
 				' ON CONFLICT(goalId, dateTime) DO UPDATE SET type = excluded.type, text = excluded.text'
