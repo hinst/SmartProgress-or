@@ -227,15 +227,15 @@ class App {
 	}
 
 	private async readPosts(goalId: string, startId: string): Promise<Smart.Posts> {
-		let url = smartProgressUrl + '/blog/getPosts';
-		url += '?obj_id=' + goalId;
-		url += '&sorting=old_top';
-		url += '&start_id=' + startId;
-		url += '&end_id=0';
-		url += '&step_id=0';
-		url += '&only_author=0';
-		url += '&change_sorting=0';
-		url += '&obj_type=0';
+		const url = smartProgressUrl + ['/blog/getPosts',
+			'?obj_id=', goalId,
+			'&sorting=old_top',
+			'&start_id=', startId,
+			'&end_id=0',
+			'&step_id=0',
+			'&only_author=0',
+			'&change_sorting=0',
+			'&obj_type=0'].join('');
 		const response = await fetch(url, {
 			headers: {
 				Accept: 'application/json',
