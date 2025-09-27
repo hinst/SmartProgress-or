@@ -245,5 +245,5 @@ class App {
 }
 
 new App(
-	new Config(requireString(process.env.goalId), readBoolean(process.env.migrationEnabled))
+	new Config(requireString(process.env.goalId))
 ).run();
