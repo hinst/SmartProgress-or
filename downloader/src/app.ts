@@ -29,7 +29,8 @@ class App {
 			try {
 				await this.syncGoal(goalId);
 			} catch (e) {
-				console.error('Cannot read goal ' + goalId, e);
+				console.error('Cannot read goal ' + goalId);
+				throw e;
 			}
 		}
 	}
