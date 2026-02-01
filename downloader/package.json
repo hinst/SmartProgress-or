@@ -23,6 +23,7 @@
   "dependencies": {
     "jsdom": "^27.4.0",
     "luxon": "^3.7.2",
+    "node-fetch": "^3.3.2",
     "source-map-support": "^0.5.21"
   }
 }
