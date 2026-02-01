@@ -1,6 +1,6 @@
 import 'source-map-support/register';
 import { Config } from './config';
-import { readBoolean, requireString } from './string';
+import { requireString } from './string';
 import * as Smart from './smartProgress';
 import { smartProgressHost, smartProgressUrl } from './smartProgress';
 import fs from 'fs';
