@@ -30,6 +30,7 @@ class App {
 				await this.syncGoal(goalId);
 			} catch (e) {
 				console.error('Cannot read goal ' + goalId);
+				console.dir(e);
 				throw e;
 			}
 		}
@@ -245,6 +246,7 @@ class App {
 	}
 }
 
+console.log('Starting SmartProgress downloader with Node.js version ' + process.versions.node);
 new App(
 	new Config(requireString(process.env.goalId))
 ).run();

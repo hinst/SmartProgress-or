@@ -1,5 +1,9 @@
 FROM node:24
 
+RUN apt-get update
+RUN apt-get install -y ca-certificates
+RUN update-ca-certificates
+
 RUN mkdir /app
 COPY dist /app/dist
 COPY schema.sql /app/schema.sql
