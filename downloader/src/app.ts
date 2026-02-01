@@ -9,7 +9,6 @@ import { DateTime } from 'luxon';
 import { JSDOM } from 'jsdom';
 import { GoalRecord } from './goalRecord';
 import { ImageRecord } from './image';
-import fetch from 'node-fetch';
 
 class App {
 	private readonly db: DatabaseSync;
@@ -186,7 +185,7 @@ class App {
 			const text = await response.text();
 			throw new Error('Cannot read comments: ' + response.statusText + '\n' + text);
 		}
-		const responseObject: Smart.GetCommentsResponse = (await response.json()) as any;
+		const responseObject: Smart.GetCommentsResponse = (await response.json());
 		return responseObject.comments || [];
 	}
 
@@ -243,7 +242,7 @@ class App {
 			throw new Error('Could not load blog posts: ' + response.statusText + '\n' + text);
 		}
 		const posts = await response.json();
-		return posts as any;
+		return posts;
 	}
 }
 
