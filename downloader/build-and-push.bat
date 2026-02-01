@@ -1,1 +1,1 @@
-npm run build && call build-container.bat && call push.bat
+call build-container.bat && call push.bat
