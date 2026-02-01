@@ -4,7 +4,8 @@
   "main": "index.js",
   "scripts": {
     "start": "node --env-file=.env --experimental-sqlite dist/app.js",
-    "start-prod": "node --experimental-sqlite dist/app.js"
+    "start-prod": "node --experimental-sqlite dist/app.js",
+    "build": "tsc"
   },
   "engines": {
     "node": "24"

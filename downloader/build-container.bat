@@ -1,1 +1,1 @@
-docker build -t hinst/smart-progress-do-downloader --progress=plain .
+docker build -t hinst/smart-progress-do-downloader --platform=linux/aarch64 --progress=plain .

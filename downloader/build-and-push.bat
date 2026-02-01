@@ -1,1 +1,1 @@
-node_modules\.bin\tsc && call build-container.bat && call push.bat
+npm run build && call build-container.bat && call push.bat
