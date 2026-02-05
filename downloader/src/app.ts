@@ -5,12 +5,14 @@ import * as Smart from './smartProgress';
 import { smartProgressHost, smartProgressUrl } from './smartProgress';
 import fs from 'fs';
 import { DatabaseSync } from 'node:sqlite';
+import { Pool } from 'pg';
 import { DateTime } from 'luxon';
 import { JSDOM } from 'jsdom';
 import { GoalRecord } from './goalRecord';
 import { ImageRecord } from './image';
 
 class App {
+	private readonly pool: Pool;
 	private readonly db: DatabaseSync;
 	private readonly dataDirectory: string = 'data';
 
@@ -20,19 +22,30 @@ class App {
 		this.db.exec('PRAGMA journal_mode=WAL;');
 		this.db.exec(`PRAGMA busy_timeout=${1000 * 60 * 5};`);
 		this.db.exec(fs.readFileSync('schema.sql').toString());
+		this.pool = new Pool({
+			connectionString: config.postgresUrl,
+			max: 1,
+		});
 	}
 
 	async run() {
-		console.log(this.config);
-		const goalIds = this.config.goalId.split(',');
-		for (const goalId of goalIds) {
-			try {
-				await this.syncGoal(goalId);
-			} catch (e) {
-				console.error('Cannot read goal ' + goalId);
-				console.dir(e);
-				throw e;
+		try {
+			console.log(this.config);
+			await this.pool.query(fs.readFileSync('schema.postgre.sql').toString());
+			return;
+
+			const goalIds = this.config.goalId.split(',');
+			for (const goalId of goalIds) {
+				try {
+					await this.syncGoal(goalId);
+				} catch (e) {
+					console.error('Cannot read goal ' + goalId);
+					console.dir(e);
+					throw e;
+				}
 			}
+		} finally {
+			await this.pool.end();
 		}
 	}
 
@@ -248,5 +261,5 @@ class App {
 
 console.log('Starting SmartProgress downloader with Node.js version ' + process.versions.node);
 new App(
-	new Config(requireString(process.env.goalId))
+	new Config(requireString(process.env.goalId), requireString(process.env.postgresUrl))
 ).run();
