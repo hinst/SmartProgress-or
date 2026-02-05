@@ -15,6 +15,9 @@ CREATE TABLE IF NOT EXISTS goalPosts (
 	textEnglish TEXT,  /* HTML */
 	textGerman TEXT,  /* HTML */
 	type TEXT NOT NULL,
+	title TEXT,
+	titleEnglish TEXT,
+	titleGerman TEXT,
 	PRIMARY KEY (goalId, dateTime)
 );
 
