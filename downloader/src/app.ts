@@ -51,8 +51,9 @@ class App {
 		const posts = await this.readAllPosts(goalId);
 		let newCount = 0;
 		for (const post of posts) {
-			const isNew = !this.checkPostExists(goalId, post);
-			this.savePost(goalId, post);
+			const isNew = !(await this.checkPostExists(goalId, post));
+			await this.savePost(goalId, post);
+			continue;
 			const age = -this.parseDateTime(post.date).diffNow().as('days');
 			if (isNew || age < 100) {
 				const comments = await this.readComments(post.id);
@@ -67,17 +68,17 @@ class App {
 		console.log(`Sync complete: goal=${goalId} posts=${posts.length} new=${newCount}`);
 	}
 
-	private checkPostExists(goalId: string, post: Smart.Post): boolean {
+	private async checkPostExists(goalId: string, post: Smart.Post): Promise<boolean> {
 		const goalIdInt = parseInt(goalId);
 		if (isNaN(goalIdInt)) throw new Error('Cannot parse integer from goalId=' + goalId);
 		const dateEpoch = this.parseDateTime(post.date).toUTC().toSeconds();
-		const statement = this.db.prepare(
-			'SELECT COUNT(*) FROM goalPosts WHERE goalId = ? AND dateTime = ?'
+		const result = await this.pool.query(
+			'SELECT COUNT(*) FROM goalPosts WHERE goalId = $1 AND dateTime = $2',
+			[goalIdInt, dateEpoch]
 		);
-		const row = statement.get(goalIdInt, dateEpoch);
-		if (!row) return false;
-		const count = row['COUNT(*)'] as number;
-		return typeof count === 'number' && count >= 1;
+		if (!result.rows.length) return false;
+		const count = parseInt(result.rows[0].count);
+		return !isNaN(count) && count >= 1;
 	}
 
 	private parseDateTime(text: string): DateTime {
@@ -112,15 +113,15 @@ class App {
 		}
 	}
 
-	private savePost(goalId: string, post: Smart.Post) {
+	private async savePost(goalId: string, post: Smart.Post) {
 		const goalIdInt = parseInt(goalId);
 		if (isNaN(goalIdInt)) throw new Error('Cannot parse integer from goalId=' + goalId);
 		const dateEpoch = this.parseDateTime(post.date).toUTC().toSeconds();
-		const insertPost = this.db.prepare(
-			'INSERT INTO goalPosts (goalId, dateTime, type, text) VALUES (?, ?, ?, ?)' +
-				' ON CONFLICT(goalId, dateTime) DO UPDATE SET type = excluded.type, text = excluded.text'
+		await this.pool.query(
+			'INSERT INTO goalPosts (goalId, dateTime, type, text) VALUES ($1, $2, $3, $4)' +
+				' ON CONFLICT(goalId, dateTime) DO UPDATE SET type = excluded.type, text = excluded.text',
+			[goalIdInt, dateEpoch, post.type, post.msg]
 		);
-		insertPost.run(goalIdInt, dateEpoch, post.type, post.msg);
 	}
 
 	private saveImages(post: Smart.Post, imageRecords: ImageRecord[]) {
