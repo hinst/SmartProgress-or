@@ -124,17 +124,20 @@ class App {
 		);
 	}
 
-	private saveImages(post: Smart.Post, imageRecords: ImageRecord[]) {
+	private async saveImages(post: Smart.Post, imageRecords: ImageRecord[]) {
+		const goalId = parseInt(post.obj_id);
+		if (isNaN(goalId)) throw new Error('Cannot parse integer from goalId=' + post.obj_id);
 		const dateEpoch = this.parseDateTime(post.date).toUTC().toSeconds();
-		imageRecords.forEach((image, index) => {
-			const insertImage = this.db.prepare(
+		for (let index = 0; index < imageRecords.length; index++) {
+			const image = imageRecords[index];
+			await this.pool.query(
 				'INSERT INTO goalPostImages (goalId, parentDateTime, sequenceIndex, contentType, file)' +
-					' VALUES (?, ?, ?, ?, ?)' +
+					' VALUES ($1, $2, $3, $4, $5)' +
 					' ON CONFLICT(goalId, parentDateTime, sequenceIndex)' +
-					' DO UPDATE SET contentType = excluded.contentType, file = excluded.file'
+					' DO UPDATE SET contentType = excluded.contentType, file = excluded.file',
+				[goalId, dateEpoch, index, image.contentType, image.data]
 			);
-			insertImage.run(post.obj_id, dateEpoch, index, image.contentType, image.data);
-		});
+		}
 	}
 
 	private async readGoalInfo(goalId: string): Promise<GoalRecord> {
