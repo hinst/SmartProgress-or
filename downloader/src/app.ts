@@ -36,9 +36,46 @@ class App {
 			for (const goalId of goalIds) {
 				await this.syncGoal(goalId);
 			}
+			if (this.config.migrate) {
+				await this.migratePostTranslations();
+				return;
+			}
 		} finally {
 			await this.pool.end();
 		}
+	}
+
+	private async migratePostTranslations() {
+		const rows = this.db.prepare(
+			'SELECT goalId, dateTime, textEnglish, textGerman, title, titleEnglish, titleGerman' +
+				' FROM goalPosts WHERE textEnglish IS NOT NULL OR textGerman IS NOT NULL' +
+				' OR title IS NOT NULL OR titleEnglish IS NOT NULL OR titleGerman IS NOT NULL'
+		).all() as {
+			goalId: number;
+			dateTime: number;
+			textEnglish: string | null;
+			textGerman: string | null;
+			title: string | null;
+			titleEnglish: string | null;
+			titleGerman: string | null;
+		}[];
+		for (const row of rows) {
+			await this.pool.query(
+				'UPDATE goalPosts SET textEnglish = $1, textGerman = $2,' +
+					' title = $3, titleEnglish = $4, titleGerman = $5' +
+					' WHERE goalId = $6 AND dateTime = $7',
+				[
+					row.textEnglish,
+					row.textGerman,
+					row.title,
+					row.titleEnglish,
+					row.titleGerman,
+					row.goalId,
+					row.dateTime
+				]
+			);
+		}
+		console.log(`Migrated post translations: ${rows.length} rows`);
 	}
 
 	private async syncGoal(goalId: string) {
@@ -252,7 +289,11 @@ class App {
 async function main() {
 	console.log('Starting SmartProgress downloader with Node.js version ' + process.versions.node);
 	try {
-		const config = new Config(requireString(process.env.goalId), requireString(process.env.postgresUrl));
+		const config = new Config(
+			requireString(process.env.goalId),
+			requireString(process.env.postgresUrl),
+			process.env.migrate === 'true'
+		);
 		await new App(config).run();
 	} catch (e) {
 		console.error('Error in main function', e);
