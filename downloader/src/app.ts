@@ -53,15 +53,14 @@ class App {
 		for (const post of posts) {
 			const isNew = !(await this.checkPostExists(goalId, post));
 			await this.savePost(goalId, post);
-			continue;
 			const age = -this.parseDateTime(post.date).diffNow().as('days');
 			if (isNew || age < 100) {
 				const comments = await this.readComments(post.id);
-				this.saveComments(post, comments);
+				await this.saveComments(post, comments);
 			}
 			if (isNew) {
 				const images = await this.readImages(post);
-				this.saveImages(post, images);
+				await this.saveImages(post, images);
 				++newCount;
 			}
 		}
@@ -87,7 +86,7 @@ class App {
 		return dateTime;
 	}
 
-	private saveComments(post: Smart.Post, comments: Smart.Comment[]) {
+	private async saveComments(post: Smart.Post, comments: Smart.Comment[]) {
 		const parentDateTime = this.parseDateTime(post.date).toUTC().toSeconds();
 		const goalId = parseInt(post.obj_id);
 		if (isNaN(goalId)) throw new Error('Cannot parse integer from goalId=' + post.obj_id);
@@ -96,19 +95,19 @@ class App {
 			const smartProgressUserId = parseInt(comment.user_id);
 			if (isNaN(smartProgressUserId))
 				throw new Error('Cannot parse integer from userId' + comment.user_id);
-			const insertComment = this.db.prepare(
+			await this.pool.query(
 				'INSERT INTO goalPostComments (goalId, parentDateTime, dateTime, smartProgressUserId, username, text)' +
-					' VALUES (?, ?, ?, ?, ?, ?)' +
+					' VALUES ($1, $2, $3, $4, $5, $6)' +
 					' ON CONFLICT (goalId, parentDateTime, dateTime, smartProgressUserId)' +
-					' DO UPDATE SET username = excluded.username, text = excluded.text'
-			);
-			insertComment.run(
-				goalId,
-				parentDateTime,
-				dateTime,
-				smartProgressUserId,
-				comment.username || '',
-				comment.msg
+					' DO UPDATE SET username = excluded.username, text = excluded.text',
+				[
+					goalId,
+					parentDateTime,
+					dateTime,
+					smartProgressUserId,
+					comment.username || '',
+					comment.msg
+				]
 			);
 		}
 	}
