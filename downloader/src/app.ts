@@ -32,17 +32,9 @@ class App {
 		try {
 			console.log(this.config);
 			await this.pool.query(fs.readFileSync('schema.postgre.sql').toString());
-			return;
-
 			const goalIds = this.config.goalId.split(',');
 			for (const goalId of goalIds) {
-				try {
-					await this.syncGoal(goalId);
-				} catch (e) {
-					console.error('Cannot read goal ' + goalId);
-					console.dir(e);
-					throw e;
-				}
+				await this.syncGoal(goalId);
 			}
 		} finally {
 			await this.pool.end();
@@ -259,7 +251,14 @@ class App {
 	}
 }
 
-console.log('Starting SmartProgress downloader with Node.js version ' + process.versions.node);
-new App(
-	new Config(requireString(process.env.goalId), requireString(process.env.postgresUrl))
-).run();
+async function main() {
+	console.log('Starting SmartProgress downloader with Node.js version ' + process.versions.node);
+	try {
+		const config = new Config(requireString(process.env.goalId), requireString(process.env.postgresUrl));
+		await new App(config).run();
+	} catch (e) {
+		console.error('Error in main function', e);
+	}
+}
+
+main();
