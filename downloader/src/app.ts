@@ -43,7 +43,7 @@ class App {
 
 	private async syncGoal(goalId: string) {
 		const goalInfo = await this.readGoalInfo(goalId);
-		this.saveGoalInfo(goalInfo);
+		await this.saveGoalInfo(goalInfo);
 		await this.syncPosts(goalId);
 	}
 
@@ -153,16 +153,11 @@ class App {
 		return new GoalRecord(goalIdNumber, title, descriptionHtml || '', authorName || '');
 	}
 
-	private saveGoalInfo(goalRecord: GoalRecord) {
-		const statement = this.db.prepare(
-			'INSERT INTO goals (id, title, description, authorName) VALUES (?, ?, ?, ?)' +
-				' ON CONFLICT(id) DO UPDATE SET title = excluded.title, description = excluded.description, authorName = excluded.authorName'
-		);
-		statement.run(
-			goalRecord.id,
-			goalRecord.title,
-			goalRecord.description,
-			goalRecord.authorName
+	private async saveGoalInfo(goalRecord: GoalRecord) {
+		await this.pool.query(
+			'INSERT INTO goals (id, title, description, authorName) VALUES ($1, $2, $3, $4)' +
+				' ON CONFLICT(id) DO UPDATE SET title = excluded.title, description = excluded.description, authorName = excluded.authorName',
+			[goalRecord.id, goalRecord.title, goalRecord.description, goalRecord.authorName]
 		);
 	}
 
