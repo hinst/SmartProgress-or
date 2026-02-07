@@ -9,5 +9,10 @@
 			"path": "web-ui"
 		}
 	],
-	"settings": {}
+	"settings": {
+		"cSpell.words": [
+			"openssl",
+			"postgre"
+		]
+	}
 }
