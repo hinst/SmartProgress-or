@@ -47,35 +47,19 @@ class App {
 
 	private async migratePostTranslations() {
 		const rows = this.db.prepare(
-			'SELECT goalId, dateTime, textEnglish, textGerman, title, titleEnglish, titleGerman' +
-			' FROM goalPosts WHERE textEnglish IS NOT NULL OR textGerman IS NOT NULL' +
-			' OR title IS NOT NULL OR titleEnglish IS NOT NULL OR titleGerman IS NOT NULL'
+			'SELECT goalId, dateTime, isPublic FROM goalPosts'
 		).all() as {
 			goalId: number;
 			dateTime: number;
-			textEnglish: string | null;
-			textGerman: string | null;
-			title: string | null;
-			titleEnglish: string | null;
-			titleGerman: string | null;
+			isPublic: number;
 		}[];
 		for (const row of rows) {
 			await this.pool.query(
-				'UPDATE goalPosts SET textEnglish = $1, textGerman = $2,' +
-				' title = $3, titleEnglish = $4, titleGerman = $5' +
-				' WHERE goalId = $6 AND dateTime = $7',
-				[
-					row.textEnglish,
-					row.textGerman,
-					row.title,
-					row.titleEnglish,
-					row.titleGerman,
-					row.goalId,
-					row.dateTime
-				]
+				'UPDATE goalPosts SET isPublic = $1 WHERE goalId = $2 AND dateTime = $3',
+				[row.isPublic, row.goalId, row.dateTime]
 			);
 		}
-		console.log(`Migrated post translations: ${rows.length} rows`);
+		console.log(`Migrated isPublic field: ${rows.length} rows`);
 	}
 
 	private async syncGoal(goalId: string) {
