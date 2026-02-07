@@ -48,8 +48,8 @@ class App {
 	private async migratePostTranslations() {
 		const rows = this.db.prepare(
 			'SELECT goalId, dateTime, textEnglish, textGerman, title, titleEnglish, titleGerman' +
-				' FROM goalPosts WHERE textEnglish IS NOT NULL OR textGerman IS NOT NULL' +
-				' OR title IS NOT NULL OR titleEnglish IS NOT NULL OR titleGerman IS NOT NULL'
+			' FROM goalPosts WHERE textEnglish IS NOT NULL OR textGerman IS NOT NULL' +
+			' OR title IS NOT NULL OR titleEnglish IS NOT NULL OR titleGerman IS NOT NULL'
 		).all() as {
 			goalId: number;
 			dateTime: number;
@@ -62,8 +62,8 @@ class App {
 		for (const row of rows) {
 			await this.pool.query(
 				'UPDATE goalPosts SET textEnglish = $1, textGerman = $2,' +
-					' title = $3, titleEnglish = $4, titleGerman = $5' +
-					' WHERE goalId = $6 AND dateTime = $7',
+				' title = $3, titleEnglish = $4, titleGerman = $5' +
+				' WHERE goalId = $6 AND dateTime = $7',
 				[
 					row.textEnglish,
 					row.textGerman,
@@ -134,9 +134,9 @@ class App {
 				throw new Error('Cannot parse integer from userId' + comment.user_id);
 			await this.pool.query(
 				'INSERT INTO goalPostComments (goalId, parentDateTime, dateTime, smartProgressUserId, username, text)' +
-					' VALUES ($1, $2, $3, $4, $5, $6)' +
-					' ON CONFLICT (goalId, parentDateTime, dateTime, smartProgressUserId)' +
-					' DO UPDATE SET username = excluded.username, text = excluded.text',
+				' VALUES ($1, $2, $3, $4, $5, $6)' +
+				' ON CONFLICT (goalId, parentDateTime, dateTime, smartProgressUserId)' +
+				' DO UPDATE SET username = excluded.username, text = excluded.text',
 				[
 					goalId,
 					parentDateTime,
@@ -155,7 +155,7 @@ class App {
 		const dateEpoch = this.parseDateTime(post.date).toUTC().toSeconds();
 		await this.pool.query(
 			'INSERT INTO goalPosts (goalId, dateTime, type, text) VALUES ($1, $2, $3, $4)' +
-				' ON CONFLICT(goalId, dateTime) DO UPDATE SET type = excluded.type, text = excluded.text',
+			' ON CONFLICT(goalId, dateTime) DO UPDATE SET type = excluded.type, text = excluded.text',
 			[goalIdInt, dateEpoch, post.type, post.msg]
 		);
 	}
@@ -168,9 +168,9 @@ class App {
 			const image = imageRecords[index];
 			await this.pool.query(
 				'INSERT INTO goalPostImages (goalId, parentDateTime, sequenceIndex, contentType, file)' +
-					' VALUES ($1, $2, $3, $4, $5)' +
-					' ON CONFLICT(goalId, parentDateTime, sequenceIndex)' +
-					' DO UPDATE SET contentType = excluded.contentType, file = excluded.file',
+				' VALUES ($1, $2, $3, $4, $5)' +
+				' ON CONFLICT(goalId, parentDateTime, sequenceIndex)' +
+				' DO UPDATE SET contentType = excluded.contentType, file = excluded.file',
 				[goalId, dateEpoch, index, image.contentType, image.data]
 			);
 		}
@@ -196,7 +196,7 @@ class App {
 	private async saveGoalInfo(goalRecord: GoalRecord) {
 		await this.pool.query(
 			'INSERT INTO goals (id, title, description, authorName) VALUES ($1, $2, $3, $4)' +
-				' ON CONFLICT(id) DO UPDATE SET title = excluded.title, description = excluded.description, authorName = excluded.authorName',
+			' ON CONFLICT(id) DO UPDATE SET title = excluded.title, description = excluded.description, authorName = excluded.authorName',
 			[goalRecord.id, goalRecord.title, goalRecord.description, goalRecord.authorName]
 		);
 	}
@@ -241,9 +241,9 @@ class App {
 			if (!response.ok)
 				throw new Error(
 					'Cannot read image. Status = ' +
-						response.status +
-						'\n' +
-						(await response.text())
+					response.status +
+					'\n' +
+					(await response.text())
 				);
 
 			const contentType = response.headers.get('Content-Type') || '';
@@ -295,8 +295,10 @@ async function main() {
 			process.env.migrate === 'true'
 		);
 		await new App(config).run();
+		process.exitCode = 0;
 	} catch (e) {
 		console.error('Error in main function', e);
+		process.exitCode = 1;
 	}
 }
 
