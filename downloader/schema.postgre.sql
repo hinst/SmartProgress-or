@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS goals (
 CREATE TABLE IF NOT EXISTS goalPosts (
 	goalId BIGINT NOT NULL,
 	dateTime BIGINT NOT NULL, /* Unix seconds UTC */
-	isPublic BIGINT NOT NULL DEFAULT 0,
+	isPublic BOOLEAN NOT NULL DEFAULT FALSE,
 	text TEXT NOT NULL,  /* HTML */
 	textEnglish TEXT,  /* HTML */
 	textGerman TEXT,  /* HTML */
