@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "start": "node --env-file=.env --experimental-sqlite dist/app.js",
-    "start-prod": "node --experimental-sqlite dist/app.js",
+    "start": "node --env-file=.env dist/app.js",
+    "start-prod": "node dist/app.js",
     "build": "tsc"
   },
   "engines": {

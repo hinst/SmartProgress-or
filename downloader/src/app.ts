@@ -4,7 +4,6 @@ import { requireString } from './string';
 import * as Smart from './smartProgress';
 import { smartProgressHost, smartProgressUrl } from './smartProgress';
 import fs from 'fs';
-import { DatabaseSync } from 'node:sqlite';
 import { Pool } from 'pg';
 import { DateTime } from 'luxon';
 import { JSDOM } from 'jsdom';
@@ -13,15 +12,10 @@ import { ImageRecord } from './image';
 
 class App {
 	private readonly pool: Pool;
-	private readonly db: DatabaseSync;
 	private readonly dataDirectory: string = 'data';
 
 	constructor(private config: Config) {
 		fs.mkdirSync(this.dataDirectory, { recursive: true });
-		this.db = new DatabaseSync(this.dataDirectory + '/hinst-website.db');
-		this.db.exec('PRAGMA journal_mode=WAL;');
-		this.db.exec(`PRAGMA busy_timeout=${1000 * 60 * 5};`);
-		this.db.exec(fs.readFileSync('schema.sql').toString());
 		this.pool = new Pool({
 			connectionString: config.postgresUrl,
 			max: 1,
@@ -37,29 +31,12 @@ class App {
 				await this.syncGoal(goalId);
 			}
 			if (this.config.migrate) {
-				await this.migratePostTranslations();
+				// put database migration here, if needed
 				return;
 			}
 		} finally {
 			await this.pool.end();
 		}
-	}
-
-	private async migratePostTranslations() {
-		const rows = this.db.prepare(
-			'SELECT goalId, dateTime, isPublic FROM goalPosts'
-		).all() as {
-			goalId: number;
-			dateTime: number;
-			isPublic: number;
-		}[];
-		for (const row of rows) {
-			await this.pool.query(
-				'UPDATE goalPosts SET isPublic = $1 WHERE goalId = $2 AND dateTime = $3',
-				[row.isPublic, row.goalId, row.dateTime]
-			);
-		}
-		console.log(`Migrated isPublic field: ${rows.length} rows`);
 	}
 
 	private async syncGoal(goalId: string) {
