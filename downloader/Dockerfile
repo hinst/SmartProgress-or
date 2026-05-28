@@ -7,7 +7,6 @@ ENV NODE_OPTIONS="--use-openssl-ca"
 
 RUN mkdir /app
 COPY dist /app/dist
-COPY schema.sql /app/schema.sql
 COPY schema.postgre.sql /app/schema.postgre.sql
 COPY package.json /app/package.json
 RUN chown -R node:node /app
