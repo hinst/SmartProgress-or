@@ -1,1 +1,1 @@
-docker push hinst/smart-progress-do-downloader
+docker push 192.168.0.23:30001/hinst/smart-progress-do-downloader
