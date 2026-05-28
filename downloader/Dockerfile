@@ -1,4 +1,4 @@
-FROM node:24
+FROM node:26
 
 RUN apt-get update
 RUN apt-get install -y ca-certificates
