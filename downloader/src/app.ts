@@ -160,7 +160,6 @@ class App {
 		for (let i = 0; i < document.head.children.length; ++i) {
 			const metaItem = document.head.children.item(i);
 			if (!metaItem) continue;
-			console.log(metaItem.tagName);
 			if (metaItem.tagName.toLowerCase() === 'link' && metaItem.getAttribute('rel') === 'image_src')
 				imageUrl = metaItem.getAttribute('href') || '';
 		}
