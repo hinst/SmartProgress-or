@@ -4,6 +4,5 @@ export class GoalRecord {
 		public title: string,
 		public description: string,
 		public authorName: string,
-	) {
-	}
+	) {}
 }

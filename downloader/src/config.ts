@@ -3,6 +3,5 @@ export class Config {
 		public readonly goalId: string,
 		public readonly postgresUrl: string,
 		public readonly migrate: boolean,
-	) {
-	}
+	) {}
 }

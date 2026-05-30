@@ -1,14 +1,14 @@
 import 'source-map-support/register';
-import { Config } from './config';
-import { requireString } from './string';
-import * as Smart from './smartProgress';
-import { smartProgressHost, smartProgressUrl } from './smartProgress';
-import fs from 'fs';
-import { Pool } from 'pg';
-import { DateTime } from 'luxon';
+import fs from 'node:fs';
 import { JSDOM } from 'jsdom';
+import { DateTime } from 'luxon';
+import { Pool } from 'pg';
+import { Config } from './config';
 import { GoalRecord } from './goalRecord';
 import { ImageRecord } from './image';
+import * as Smart from './smartProgress';
+import { smartProgressHost, smartProgressUrl } from './smartProgress';
+import { requireString } from './string';
 
 class App {
 	private readonly pool: Pool;
@@ -66,16 +66,16 @@ class App {
 	}
 
 	private async checkPostExists(goalId: string, post: Smart.Post): Promise<boolean> {
-		const goalIdInt = parseInt(goalId);
-		if (isNaN(goalIdInt)) throw new Error('Cannot parse integer from goalId=' + goalId);
+		const goalIdInt = parseInt(goalId, 10);
+		if (Number.isNaN(goalIdInt)) throw new Error('Cannot parse integer from goalId=' + goalId);
 		const dateEpoch = this.parseDateTime(post.date).toUTC().toSeconds();
 		const result = await this.pool.query(
 			'SELECT COUNT(*) FROM goalPosts WHERE goalId = $1 AND dateTime = $2',
-			[goalIdInt, dateEpoch]
+			[goalIdInt, dateEpoch],
 		);
 		if (!result.rows.length) return false;
-		const count = parseInt(result.rows[0].count);
-		return !isNaN(count) && count >= 1;
+		const count = parseInt(result.rows[0].count, 10);
+		return !Number.isNaN(count) && count >= 1;
 	}
 
 	private parseDateTime(text: string): DateTime {
@@ -86,53 +86,53 @@ class App {
 
 	private async saveComments(post: Smart.Post, comments: Smart.Comment[]) {
 		const parentDateTime = this.parseDateTime(post.date).toUTC().toSeconds();
-		const goalId = parseInt(post.obj_id);
-		if (isNaN(goalId)) throw new Error('Cannot parse integer from goalId=' + post.obj_id);
+		const goalId = parseInt(post.obj_id, 10);
+		if (Number.isNaN(goalId)) throw new Error('Cannot parse integer from goalId=' + post.obj_id);
 		for (const comment of comments) {
 			const dateTime = this.parseDateTime(comment.date).toUTC().toSeconds();
-			const smartProgressUserId = parseInt(comment.user_id);
-			if (isNaN(smartProgressUserId))
+			const smartProgressUserId = parseInt(comment.user_id, 10);
+			if (Number.isNaN(smartProgressUserId))
 				throw new Error('Cannot parse integer from userId' + comment.user_id);
 			await this.pool.query(
 				'INSERT INTO goalPostComments (goalId, parentDateTime, dateTime, smartProgressUserId, username, text)' +
-				' VALUES ($1, $2, $3, $4, $5, $6)' +
-				' ON CONFLICT (goalId, parentDateTime, dateTime, smartProgressUserId)' +
-				' DO UPDATE SET username = excluded.username, text = excluded.text',
+					' VALUES ($1, $2, $3, $4, $5, $6)' +
+					' ON CONFLICT (goalId, parentDateTime, dateTime, smartProgressUserId)' +
+					' DO UPDATE SET username = excluded.username, text = excluded.text',
 				[
 					goalId,
 					parentDateTime,
 					dateTime,
 					smartProgressUserId,
 					comment.username || '',
-					comment.msg
-				]
+					comment.msg,
+				],
 			);
 		}
 	}
 
 	private async savePost(goalId: string, post: Smart.Post) {
-		const goalIdInt = parseInt(goalId);
-		if (isNaN(goalIdInt)) throw new Error('Cannot parse integer from goalId=' + goalId);
+		const goalIdInt = parseInt(goalId, 10);
+		if (Number.isNaN(goalIdInt)) throw new Error('Cannot parse integer from goalId=' + goalId);
 		const dateEpoch = this.parseDateTime(post.date).toUTC().toSeconds();
 		await this.pool.query(
 			'INSERT INTO goalPosts (goalId, dateTime, type, text) VALUES ($1, $2, $3, $4)' +
-			' ON CONFLICT(goalId, dateTime) DO UPDATE SET type = excluded.type, text = excluded.text',
-			[goalIdInt, dateEpoch, post.type, post.msg]
+				' ON CONFLICT(goalId, dateTime) DO UPDATE SET type = excluded.type, text = excluded.text',
+			[goalIdInt, dateEpoch, post.type, post.msg],
 		);
 	}
 
 	private async saveImages(post: Smart.Post, imageRecords: ImageRecord[]) {
-		const goalId = parseInt(post.obj_id);
-		if (isNaN(goalId)) throw new Error('Cannot parse integer from goalId=' + post.obj_id);
+		const goalId = parseInt(post.obj_id, 10);
+		if (Number.isNaN(goalId)) throw new Error('Cannot parse integer from goalId=' + post.obj_id);
 		const dateEpoch = this.parseDateTime(post.date).toUTC().toSeconds();
 		for (let index = 0; index < imageRecords.length; index++) {
 			const image = imageRecords[index];
 			await this.pool.query(
 				'INSERT INTO goalPostImages (goalId, parentDateTime, sequenceIndex, contentType, file)' +
-				' VALUES ($1, $2, $3, $4, $5)' +
-				' ON CONFLICT(goalId, parentDateTime, sequenceIndex)' +
-				' DO UPDATE SET contentType = excluded.contentType, file = excluded.file',
-				[goalId, dateEpoch, index, image.contentType, image.data]
+					' VALUES ($1, $2, $3, $4, $5)' +
+					' ON CONFLICT(goalId, parentDateTime, sequenceIndex)' +
+					' DO UPDATE SET contentType = excluded.contentType, file = excluded.file',
+				[goalId, dateEpoch, index, image.contentType, image.data],
 			);
 		}
 	}
@@ -150,8 +150,8 @@ class App {
 		const descriptionHtml = document.querySelector('#goal_descr div')?.innerHTML.trim();
 		const authorName = document.querySelector('.user-widget__name a')?.textContent?.trim();
 		await this.readGoalImage(document);
-		const goalIdNumber = parseInt(goalId);
-		if (isNaN(goalIdNumber)) throw new Error('Cannot parse integer from goalId=' + goalId);
+		const goalIdNumber = parseInt(goalId, 10);
+		if (Number.isNaN(goalIdNumber)) throw new Error('Cannot parse integer from goalId=' + goalId);
 		return new GoalRecord(goalIdNumber, title, descriptionHtml || '', authorName || '');
 	}
 
@@ -159,17 +159,17 @@ class App {
 		let imageUrl = '';
 		for (let i = 0; i < document.head.children.length; ++i) {
 			const metaItem = document.head.children.item(i);
-			if (!metaItem)
-				continue;
+			if (!metaItem) continue;
 			console.log(metaItem.tagName);
 			if (metaItem.tagName.toLowerCase() === 'link' && metaItem.getAttribute('rel') === 'image_src')
 				imageUrl = metaItem.getAttribute('href') || '';
 		}
-		if (imageUrl.length === 0)
-			throw new Error("Cannot find image");
+		if (imageUrl.length === 0) throw new Error('Cannot find image');
 		const imageResponse = await fetch(imageUrl);
 		if (!imageResponse.ok)
-			throw new Error('Cannot read image. Status: ' + imageResponse.statusText + ', URL: ' + imageUrl);
+			throw new Error(
+				'Cannot read image. Status: ' + imageResponse.statusText + ', URL: ' + imageUrl,
+			);
 		const imageBlob = await imageResponse.blob();
 		const imageData = await imageBlob.bytes();
 		console.log(imageData.length);
@@ -178,8 +178,8 @@ class App {
 	private async saveGoalInfo(goalRecord: GoalRecord) {
 		await this.pool.query(
 			'INSERT INTO goals (id, title, description, authorName) VALUES ($1, $2, $3, $4)' +
-			' ON CONFLICT(id) DO UPDATE SET title = excluded.title, description = excluded.description, authorName = excluded.authorName',
-			[goalRecord.id, goalRecord.title, goalRecord.description, goalRecord.authorName]
+				' ON CONFLICT(id) DO UPDATE SET title = excluded.title, description = excluded.description, authorName = excluded.authorName',
+			[goalRecord.id, goalRecord.title, goalRecord.description, goalRecord.authorName],
 		);
 	}
 
@@ -200,14 +200,14 @@ class App {
 		const response = await fetch(url, {
 			headers: {
 				Accept: 'application/json',
-				Host: smartProgressHost
-			}
+				Host: smartProgressHost,
+			},
 		});
 		if (!response.ok) {
 			const text = await response.text();
 			throw new Error('Cannot read comments: ' + response.statusText + '\n' + text);
 		}
-		const responseObject: Smart.GetCommentsResponse = (await response.json());
+		const responseObject: Smart.GetCommentsResponse = await response.json();
 		return responseObject.comments || [];
 	}
 
@@ -217,15 +217,12 @@ class App {
 			const url = smartProgressUrl + image.url;
 			const response = await fetch(url, {
 				headers: {
-					Host: smartProgressHost
-				}
+					Host: smartProgressHost,
+				},
 			});
 			if (!response.ok)
 				throw new Error(
-					'Cannot read image. Status = ' +
-					response.status +
-					'\n' +
-					(await response.text())
+					'Cannot read image. Status = ' + response.status + '\n' + (await response.text()),
 				);
 
 			const contentType = response.headers.get('Content-Type') || '';
@@ -250,13 +247,13 @@ class App {
 			'&step_id=0',
 			'&only_author=0',
 			'&change_sorting=0',
-			'&obj_type=0'
+			'&obj_type=0',
 		].join('');
 		const response = await fetch(url, {
 			headers: {
 				Accept: 'application/json',
-				Host: smartProgressHost
-			}
+				Host: smartProgressHost,
+			},
 		});
 		if (!response.ok) {
 			const text = await response.text();
@@ -273,7 +270,7 @@ async function main() {
 		const config = new Config(
 			requireString(process.env.goalId),
 			requireString(process.env.postgresUrl),
-			process.env.migrate === 'true'
+			process.env.migrate === 'true',
 		);
 		await new App(config).run();
 		process.exitCode = 0;
@@ -283,4 +280,4 @@ async function main() {
 	}
 }
 
-main();
+const _ = main();

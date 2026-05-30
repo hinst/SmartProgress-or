@@ -5,6 +5,5 @@ export class GoalHeader {
 		public postCount: number,
 		public updatedAt: string,
 		public author: string,
-	) {
-	}
+	) {}
 }

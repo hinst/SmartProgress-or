@@ -1,0 +1,25 @@
+{
+	"$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+	"javascript": {
+		"formatter": {
+			"quoteStyle": "single"
+		}
+	},
+	"linter": {
+		"rules": {
+			"style": {
+				"useTemplate": "off",
+				"useImportType": "off"
+			},
+			"nursery": {
+				"noFloatingPromises": "error"
+			},
+			"complexity": {
+				"useArrowFunction": "off"
+			}
+		}
+	},
+	"formatter": {
+		"lineWidth": 100
+	}
+}
