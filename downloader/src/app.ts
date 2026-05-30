@@ -149,9 +149,30 @@ class App {
 		const title = document.title;
 		const descriptionHtml = document.querySelector('#goal_descr div')?.innerHTML.trim();
 		const authorName = document.querySelector('.user-widget__name a')?.textContent?.trim();
+		await this.readGoalImage(document);
 		const goalIdNumber = parseInt(goalId);
 		if (isNaN(goalIdNumber)) throw new Error('Cannot parse integer from goalId=' + goalId);
 		return new GoalRecord(goalIdNumber, title, descriptionHtml || '', authorName || '');
+	}
+
+	private async readGoalImage(document: Document) {
+		let imageUrl = '';
+		for (let i = 0; i < document.head.children.length; ++i) {
+			const metaItem = document.head.children.item(i);
+			if (!metaItem)
+				continue;
+			console.log(metaItem.tagName);
+			if (metaItem.tagName.toLowerCase() === 'link' && metaItem.getAttribute('rel') === 'image_src')
+				imageUrl = metaItem.getAttribute('href') || '';
+		}
+		if (imageUrl.length === 0)
+			throw new Error("Cannot find image");
+		const imageResponse = await fetch(imageUrl);
+		if (!imageResponse.ok)
+			throw new Error('Cannot read image. Status: ' + imageResponse.statusText + ', URL: ' + imageUrl);
+		const imageBlob = await imageResponse.blob();
+		const imageData = await imageBlob.bytes();
+		console.log(imageData.length);
 	}
 
 	private async saveGoalInfo(goalRecord: GoalRecord) {
@@ -209,7 +230,6 @@ class App {
 
 			const contentType = response.headers.get('Content-Type') || '';
 			const blob = await response.blob();
-			//@ts-ignore
 			const data = await blob.bytes();
 			const imageRecord = new ImageRecord(contentType, data);
 			imageRecords.push(imageRecord);
