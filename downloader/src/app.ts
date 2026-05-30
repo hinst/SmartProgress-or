@@ -5,7 +5,7 @@ import { DateTime } from 'luxon';
 import { Pool } from 'pg';
 import { Config } from './config';
 import { GoalRecord } from './goalRecord';
-import { ImageRecord } from './image';
+import { ImageRecord } from './imageRecord';
 import * as Smart from './smartProgress';
 import { smartProgressHost, smartProgressUrl } from './smartProgress';
 import { requireString } from './string';
@@ -149,13 +149,13 @@ class App {
 		const title = document.title;
 		const descriptionHtml = document.querySelector('#goal_descr div')?.innerHTML.trim();
 		const authorName = document.querySelector('.user-widget__name a')?.textContent?.trim();
-		await this.readGoalImage(document);
+		const goalImage = await this.readGoalImage(document);
 		const goalIdNumber = parseInt(goalId, 10);
 		if (Number.isNaN(goalIdNumber)) throw new Error('Cannot parse integer from goalId=' + goalId);
-		return new GoalRecord(goalIdNumber, title, descriptionHtml || '', authorName || '');
+		return new GoalRecord(goalIdNumber, title, descriptionHtml || '', authorName || '', goalImage);
 	}
 
-	private async readGoalImage(document: Document) {
+	private async readGoalImage(document: Document): Promise<ImageRecord> {
 		let imageUrl = '';
 		for (let i = 0; i < document.head.children.length; ++i) {
 			const metaItem = document.head.children.item(i);
@@ -170,16 +170,30 @@ class App {
 			throw new Error(
 				'Cannot read image. Status: ' + imageResponse.statusText + ', URL: ' + imageUrl,
 			);
+		const contentType = imageResponse.headers.get('Content-Type') || '';
 		const imageBlob = await imageResponse.blob();
 		const imageData = await imageBlob.bytes();
-		console.log(imageData.length);
+		return new ImageRecord(contentType, imageData);
 	}
 
 	private async saveGoalInfo(goalRecord: GoalRecord) {
 		await this.pool.query(
-			'INSERT INTO goals (id, title, description, authorName) VALUES ($1, $2, $3, $4)' +
-				' ON CONFLICT(id) DO UPDATE SET title = excluded.title, description = excluded.description, authorName = excluded.authorName',
-			[goalRecord.id, goalRecord.title, goalRecord.description, goalRecord.authorName],
+			'INSERT INTO goals (id, title, description, authorName, imageData, imageContentType) ' +
+				'VALUES ($1, $2, $3, $4, $5, $6) ' +
+				'ON CONFLICT(id) DO UPDATE SET ' +
+				'title = excluded.title, ' +
+				'description = excluded.description, ' +
+				'authorName = excluded.authorName, ' +
+				'imageData = excluded.imageData, ' +
+				'imageContentType = excluded.imageContentType',
+			[
+				goalRecord.id,
+				goalRecord.title,
+				goalRecord.description,
+				goalRecord.authorName,
+				goalRecord.image.data,
+				goalRecord.image.contentType,
+			],
 		);
 	}
 
