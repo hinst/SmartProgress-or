@@ -1,6 +1,8 @@
 CREATE TABLE IF NOT EXISTS goals (
 	id BIGINT NOT NULL PRIMARY KEY,
 	title TEXT NOT NULL,
+	titleEnglish TEXT NOT NULL,
+	titleGerman TEXT NOT NULL,
 	description TEXT NOT NULL, /* HTML */
 	authorName TEXT NOT NULL,
 
@@ -9,6 +11,8 @@ CREATE TABLE IF NOT EXISTS goals (
 );
 ALTER TABLE goals ADD COLUMN IF NOT EXISTS imageData BYTEA NOT NULL default '';
 ALTER TABLE goals ADD COLUMN IF NOT EXISTS imageContentType TEXT NOT NULL default '';
+ALTER TABLE goals ADD COLUMN IF NOT EXISTS titleEnglish TEXT NOT NULL default '';
+ALTER TABLE goals ADD COLUMN IF NOT EXISTS titleGerman TEXT NOT NULL default '';
 
 CREATE TABLE IF NOT EXISTS goalPosts (
 	goalId BIGINT NOT NULL,
