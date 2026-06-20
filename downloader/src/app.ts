@@ -2,6 +2,7 @@ import 'source-map-support/register';
 import fs from 'node:fs';
 import { JSDOM } from 'jsdom';
 import { DateTime } from 'luxon';
+import { NodeHtmlMarkdown, NodeHtmlMarkdownOptions } from 'node-html-markdown';
 import { Pool } from 'pg';
 import { Config } from './config';
 import { GoalRecord } from './goalRecord';
@@ -27,15 +28,41 @@ class App {
 			console.log(this.config);
 			await this.pool.query(fs.readFileSync('schema.postgre.sql').toString());
 			const goalIds = this.config.goalId.split(',');
+			if (this.config.migrate) {
+				await this.migrateMarkdown();
+				return;
+			}
 			for (const goalId of goalIds) {
 				await this.syncGoal(goalId);
 			}
-			if (this.config.migrate) {
-				// put database migration here, if needed
-				return;
-			}
 		} finally {
 			await this.pool.end();
+		}
+	}
+
+	private async migrateMarkdown() {
+		const posts = await this.pool.query(
+			'SELECT goalId as "goalId", dateTime as "dateTime" from goalPosts',
+		);
+		for (const row of posts.rows) {
+			const textRows = await this.pool.query(
+				'SELECT text as "text", textEnglish as "textEnglish", textGerman as "textGerman" ' +
+					'FROM goalPosts WHERE goalId = $1 AND dateTime = $2',
+				[row.goalId, row.dateTime],
+			);
+			const textRow = textRows.rows[0];
+			if (textRow.text) {
+				const text = new NodeHtmlMarkdown().translate(textRow.text);
+				await this.pool.query('UPDATE goalPosts SET text = $1', [text]);
+			}
+			if (textRow.textEnglish) {
+				const textEnglish = new NodeHtmlMarkdown().translate(textRow.textEnglish);
+				await this.pool.query('UPDATE goalPosts SET textEnglish = $1', [textEnglish]);
+			}
+			if (textRow.textGerman) {
+				const textGerman = new NodeHtmlMarkdown().translate(textRow.textGerman);
+				await this.pool.query('UPDATE goalPosts SET textGerman = $1', [textGerman]);
+			}
 		}
 	}
 
