@@ -53,15 +53,24 @@ class App {
 			const textRow = textRows.rows[0];
 			if (textRow.text) {
 				const text = new NodeHtmlMarkdown().translate(textRow.text);
-				await this.pool.query('UPDATE goalPosts SET text = $1', [text]);
+				await this.pool.query(
+					'UPDATE goalPosts SET text = $1 WHERE goalId = $2 AND dateTime = $3',
+					[text, row.goalId, row.dateTime],
+				);
 			}
 			if (textRow.textEnglish) {
 				const textEnglish = new NodeHtmlMarkdown().translate(textRow.textEnglish);
-				await this.pool.query('UPDATE goalPosts SET textEnglish = $1', [textEnglish]);
+				await this.pool.query(
+					'UPDATE goalPosts SET textEnglish = $1 WHERE goalId = $2 AND dateTime = $3',
+					[textEnglish, row.goalId, row.dateTime],
+				);
 			}
 			if (textRow.textGerman) {
 				const textGerman = new NodeHtmlMarkdown().translate(textRow.textGerman);
-				await this.pool.query('UPDATE goalPosts SET textGerman = $1', [textGerman]);
+				await this.pool.query(
+					'UPDATE goalPosts SET textGerman = $1  WHERE goalId = $2 AND dateTime = $3',
+					[textGerman, row.goalId, row.dateTime],
+				);
 			}
 		}
 
