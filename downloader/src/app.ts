@@ -14,6 +14,7 @@ import { requireString } from './string';
 class App {
 	private readonly pool: Pool;
 	private readonly dataDirectory: string = 'data';
+	private readonly markdown = new NodeHtmlMarkdown();
 
 	constructor(private config: Config) {
 		fs.mkdirSync(this.dataDirectory, { recursive: true });
@@ -52,21 +53,21 @@ class App {
 			);
 			const textRow = textRows.rows[0];
 			if (textRow.text) {
-				const text = new NodeHtmlMarkdown().translate(textRow.text);
+				const text = this.markdown.translate(textRow.text);
 				await this.pool.query(
 					'UPDATE goalPosts SET text = $1 WHERE goalId = $2 AND dateTime = $3',
 					[text, row.goalId, row.dateTime],
 				);
 			}
 			if (textRow.textEnglish) {
-				const textEnglish = new NodeHtmlMarkdown().translate(textRow.textEnglish);
+				const textEnglish = this.markdown.translate(textRow.textEnglish);
 				await this.pool.query(
 					'UPDATE goalPosts SET textEnglish = $1 WHERE goalId = $2 AND dateTime = $3',
 					[textEnglish, row.goalId, row.dateTime],
 				);
 			}
 			if (textRow.textGerman) {
-				const textGerman = new NodeHtmlMarkdown().translate(textRow.textGerman);
+				const textGerman = this.markdown.translate(textRow.textGerman);
 				await this.pool.query(
 					'UPDATE goalPosts SET textGerman = $1  WHERE goalId = $2 AND dateTime = $3',
 					[textGerman, row.goalId, row.dateTime],
@@ -80,7 +81,7 @@ class App {
 		);
 		for (const row of comments.rows) {
 			if (row.text) {
-				const text = new NodeHtmlMarkdown().translate(row.text);
+				const text = this.markdown.translate(row.text);
 				await this.pool.query(
 					'UPDATE goalPostComments SET text = $1 ' +
 						'WHERE goalId = $2 AND parentDateTime = $3 AND dateTime = $4 AND smartProgressUserId = $5',
@@ -155,7 +156,7 @@ class App {
 					dateTime,
 					smartProgressUserId,
 					comment.username || '',
-					comment.msg,
+					this.markdown.translate(comment.msg),
 				],
 			);
 		}
@@ -168,7 +169,7 @@ class App {
 		await this.pool.query(
 			'INSERT INTO goalPosts (goalId, dateTime, type, text) VALUES ($1, $2, $3, $4)' +
 				' ON CONFLICT(goalId, dateTime) DO UPDATE SET type = excluded.type, text = excluded.text',
-			[goalIdInt, dateEpoch, post.type, post.msg],
+			[goalIdInt, dateEpoch, post.type, this.markdown.translate(post.msg)],
 		);
 	}
 
@@ -199,11 +200,12 @@ class App {
 		const document = new JSDOM(text).window.document;
 		const title = document.title;
 		const descriptionHtml = document.querySelector('#goal_descr div')?.innerHTML.trim();
+		const description = descriptionHtml ? this.markdown.translate(descriptionHtml) : '';
 		const authorName = document.querySelector('.user-widget__name a')?.textContent?.trim();
 		const goalImage = await this.readGoalImage(document);
 		const goalIdNumber = parseInt(goalId, 10);
 		if (Number.isNaN(goalIdNumber)) throw new Error('Cannot parse integer from goalId=' + goalId);
-		return new GoalRecord(goalIdNumber, title, descriptionHtml || '', authorName || '', goalImage);
+		return new GoalRecord(goalIdNumber, title, description, authorName || '', goalImage);
 	}
 
 	private async readGoalImage(document: Document): Promise<ImageRecord> {
