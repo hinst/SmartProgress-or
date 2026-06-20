@@ -64,6 +64,21 @@ class App {
 				await this.pool.query('UPDATE goalPosts SET textGerman = $1', [textGerman]);
 			}
 		}
+
+		const comments = await this.pool.query(
+			'SELECT goalId as "goalId", parentDateTime as "parentDateTime", dateTime as "dateTime", smartProgressUserId as "smartProgressUserId", text as "text" ' +
+				'FROM goalPostComments',
+		);
+		for (const row of comments.rows) {
+			if (row.text) {
+				const text = new NodeHtmlMarkdown().translate(row.text);
+				await this.pool.query(
+					'UPDATE goalPostComments SET text = $1 ' +
+						'WHERE goalId = $2 AND parentDateTime = $3 AND dateTime = $4 AND smartProgressUserId = $5',
+					[text, row.goalId, row.parentDateTime, row.dateTime, row.smartProgressUserId],
+				);
+			}
+		}
 	}
 
 	private async syncGoal(goalId: string) {
