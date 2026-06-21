@@ -30,7 +30,7 @@ class App {
 			await this.pool.query(fs.readFileSync('schema.postgre.sql').toString());
 			const goalIds = this.config.goalId.split(',');
 			if (this.config.migrate) {
-				await this.migrateMarkdown();
+				// Put database migration here if required
 				return;
 			}
 			for (const goalId of goalIds) {
@@ -38,56 +38,6 @@ class App {
 			}
 		} finally {
 			await this.pool.end();
-		}
-	}
-
-	private async migrateMarkdown() {
-		const posts = await this.pool.query(
-			'SELECT goalId as "goalId", dateTime as "dateTime" from goalPosts',
-		);
-		for (const row of posts.rows) {
-			const textRows = await this.pool.query(
-				'SELECT text as "text", textEnglish as "textEnglish", textGerman as "textGerman" ' +
-					'FROM goalPosts WHERE goalId = $1 AND dateTime = $2',
-				[row.goalId, row.dateTime],
-			);
-			const textRow = textRows.rows[0];
-			if (textRow.text) {
-				const text = this.convertHtmlToMarkdown(textRow.text);
-				await this.pool.query(
-					'UPDATE goalPosts SET text = $1 WHERE goalId = $2 AND dateTime = $3',
-					[text, row.goalId, row.dateTime],
-				);
-			}
-			if (textRow.textEnglish) {
-				const textEnglish = this.convertHtmlToMarkdown(textRow.textEnglish);
-				await this.pool.query(
-					'UPDATE goalPosts SET textEnglish = $1 WHERE goalId = $2 AND dateTime = $3',
-					[textEnglish, row.goalId, row.dateTime],
-				);
-			}
-			if (textRow.textGerman) {
-				const textGerman = this.convertHtmlToMarkdown(textRow.textGerman);
-				await this.pool.query(
-					'UPDATE goalPosts SET textGerman = $1  WHERE goalId = $2 AND dateTime = $3',
-					[textGerman, row.goalId, row.dateTime],
-				);
-			}
-		}
-
-		const comments = await this.pool.query(
-			'SELECT goalId as "goalId", parentDateTime as "parentDateTime", dateTime as "dateTime", smartProgressUserId as "smartProgressUserId", text as "text" ' +
-				'FROM goalPostComments',
-		);
-		for (const row of comments.rows) {
-			if (row.text) {
-				const text = this.convertHtmlToMarkdown(row.text);
-				await this.pool.query(
-					'UPDATE goalPostComments SET text = $1 ' +
-						'WHERE goalId = $2 AND parentDateTime = $3 AND dateTime = $4 AND smartProgressUserId = $5',
-					[text, row.goalId, row.parentDateTime, row.dateTime, row.smartProgressUserId],
-				);
-			}
 		}
 	}
 
