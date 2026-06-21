@@ -54,6 +54,8 @@ class App {
 			const isNew = !(await this.checkPostExists(goalId, post));
 			await this.savePost(goalId, post);
 			const ageDays = -this.parseDateTime(post.date).diffNow().as('days');
+			const comments = await this.readComments(post.id);
+			await this.saveComments(post, comments);
 			if (isNew) {
 				const images = await this.readImages(post);
 				await this.saveImages(post, images);
