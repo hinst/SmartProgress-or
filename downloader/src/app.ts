@@ -2,7 +2,7 @@ import 'source-map-support/register';
 import fs from 'node:fs';
 import { JSDOM } from 'jsdom';
 import { DateTime } from 'luxon';
-import { NodeHtmlMarkdown, NodeHtmlMarkdownOptions } from 'node-html-markdown';
+import { NodeHtmlMarkdown } from 'node-html-markdown';
 import { Pool } from 'pg';
 import { Config } from './config';
 import { GoalRecord } from './goalRecord';
@@ -103,11 +103,9 @@ class App {
 		for (const post of posts) {
 			const isNew = !(await this.checkPostExists(goalId, post));
 			await this.savePost(goalId, post);
-			const age = -this.parseDateTime(post.date).diffNow().as('days');
-			if (isNew || age < 100) {
-				const comments = await this.readComments(post.id);
-				await this.saveComments(post, comments);
-			}
+			const ageDays = -this.parseDateTime(post.date).diffNow().as('days');
+			const comments = await this.readComments(post.id);
+			await this.saveComments(post, comments);
 			if (isNew) {
 				const images = await this.readImages(post);
 				await this.saveImages(post, images);
@@ -162,14 +160,34 @@ class App {
 		}
 	}
 
+	private unpackRedirects(html: string): string {
+		const prefix = 'http://smartprogress.do/site/redirect/?url=';
+		const document = new JSDOM(html).window.document;
+		[...document.getElementsByTagName('a')].forEach((link) => {
+			try {
+				let href = link.getAttribute('href');
+				if (href?.startsWith(prefix)) {
+					href = href.substring(prefix.length);
+					if (href.endsWith('%')) href = href.substring(0, href.length - 1);
+					href = decodeURIComponent(href);
+					link.setAttribute('href', href);
+				}
+			} catch (e) {
+				console.warn('Cannot process link', link, e);
+			}
+		});
+		return document.body.innerHTML;
+	}
+
 	private async savePost(goalId: string, post: Smart.Post) {
 		const goalIdInt = parseInt(goalId, 10);
 		if (Number.isNaN(goalIdInt)) throw new Error('Cannot parse integer from goalId=' + goalId);
 		const dateEpoch = this.parseDateTime(post.date).toUTC().toSeconds();
+		const msg = this.unpackRedirects(post.msg);
 		await this.pool.query(
 			'INSERT INTO goalPosts (goalId, dateTime, type, text) VALUES ($1, $2, $3, $4)' +
 				' ON CONFLICT(goalId, dateTime) DO UPDATE SET type = excluded.type, text = excluded.text',
-			[goalIdInt, dateEpoch, post.type, this.markdown.translate(post.msg)],
+			[goalIdInt, dateEpoch, post.type, this.markdown.translate(msg)],
 		);
 	}
 
