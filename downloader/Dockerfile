@@ -3,7 +3,6 @@ FROM node:26
 RUN apt-get update
 RUN apt-get install -y ca-certificates
 RUN update-ca-certificates
-ENV NODE_OPTIONS="--use-openssl-ca"
 
 RUN mkdir /app
 COPY dist /app/dist
