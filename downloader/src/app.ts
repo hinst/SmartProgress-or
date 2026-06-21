@@ -143,6 +143,7 @@ class App {
 			const smartProgressUserId = parseInt(comment.user_id, 10);
 			if (Number.isNaN(smartProgressUserId))
 				throw new Error('Cannot parse integer from userId' + comment.user_id);
+			const htmlText = this.unpackRedirects(comment.msg);
 			await this.pool.query(
 				'INSERT INTO goalPostComments (goalId, parentDateTime, dateTime, smartProgressUserId, username, text)' +
 					' VALUES ($1, $2, $3, $4, $5, $6)' +
@@ -154,7 +155,7 @@ class App {
 					dateTime,
 					smartProgressUserId,
 					comment.username || '',
-					this.markdown.translate(comment.msg),
+					this.markdown.translate(htmlText),
 				],
 			);
 		}
@@ -183,11 +184,11 @@ class App {
 		const goalIdInt = parseInt(goalId, 10);
 		if (Number.isNaN(goalIdInt)) throw new Error('Cannot parse integer from goalId=' + goalId);
 		const dateEpoch = this.parseDateTime(post.date).toUTC().toSeconds();
-		const msg = this.unpackRedirects(post.msg);
+		const htmlText = this.unpackRedirects(post.msg);
 		await this.pool.query(
 			'INSERT INTO goalPosts (goalId, dateTime, type, text) VALUES ($1, $2, $3, $4)' +
 				' ON CONFLICT(goalId, dateTime) DO UPDATE SET type = excluded.type, text = excluded.text',
-			[goalIdInt, dateEpoch, post.type, this.markdown.translate(msg)],
+			[goalIdInt, dateEpoch, post.type, this.markdown.translate(htmlText)],
 		);
 	}
 
