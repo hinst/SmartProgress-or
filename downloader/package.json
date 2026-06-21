@@ -20,13 +20,14 @@
     "@types/luxon": "^3.7.1",
     "@types/node": "^24.10.0",
     "@types/pg": "^8.16.0",
+    "@types/turndown": "^5.0.6",
     "typescript": "^5.9.3"
   },
   "dependencies": {
     "jsdom": "^28.0.0",
     "luxon": "^3.7.2",
-    "node-html-markdown": "^2.0.0",
     "pg": "^8.18.0",
-    "source-map-support": "^0.5.21"
+    "source-map-support": "^0.5.21",
+    "turndown": "^7.2.4"
   }
 }
